@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=K2D&display=swap');
+
+body {
+  background-color: #C1D8C3;
+  font-family: 'K2D', sans-serif;
+}
+
+
+.form-check-input,
+.form-check-input:focus {
+  box-shadow: none;
+  border-color: #131414;
+  outline: 0;
+}
+
+.form-control,
+.form-control:focus {
+  box-shadow: none;
+  border-color: #54a4ff;
+  outline: 0;
+}
+
+.nav-link {
+  padding: .4rem;
+  font-size: 14px;
+}
+
+
+.boxinput {
+  font-size: 14px;
+
+}
+
+.input-group-text {
+  background-color: #FFFFFF;
+  border-color: #ecd95f;
+}
+
+.card-body {
+  padding: 2px;
+}
+
+.list-group {
+  width: 100%;
+
+}
+
+.list-group-item {
+  border-left: 0px;
+  border-top: 0px;
+  border-right: 0px;
+  border-radius: 0px;
+}
+
+.list-group-item label {
+  word-wrap: break-word;
+  user-select: none;
+  overflow: hidden;
+  width: 14rem;
+}
+
+.dropdown-menu {
+  min-width: inherit;
+  font-size: 13px;
+}
+
+.checked {
+  text-decoration: line-through;
+  color: red;
+}
+
+.boxlist {
+  height: 250px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  max-height: 250px;
+}
+
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #abbc29;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a7b11b;
+}
+
+.fc-left h2 {
+  font-size: 15px;
+  /* Adjust the font size as per your preference */
+}
+
+.fc-right button {
+  /* width: 20px; */
+  font-size: 13px;
+}
+
+.fc-content,
+.fc-day-header,
+.fc-widget-head,
+.fc-day-number {
+  font-size: 10px;
+}
+
+.fc-content-skeleton td {
+  height: 30px;
+}
+/*  CSS ตัวเลขนับถอยหลัง */
+      #timer {
+				font-size: 1.5em;
+				font-weight: 300;
+				padding: 5px;
+				color: #a4cb15;
+
+			}
+
+			#timer div {
+				text-align: center;
+				display: inline-block;
+				min-width: 75px;
+				padding: 5px;
+				background: #ffffff;
+				border-radius: 10px;
+				border: 1px solid #444;
+				margin: 2px;
+			}
+			
+			#timer div span {
+				color:#15932e;
+				display: block;
+				margin-top: 2px;
+				font-size: .6em;
+				font-weight: 300;
+			}    
+#loading{
+        position :fixed;
+        top:0;
+        left:0;
+        z-index:1000;
+        background-color :rgba(255,255,255,0.9);
+        height:100vh;
+        width:100vw;
+    }
