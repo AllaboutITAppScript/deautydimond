@@ -262,11 +262,12 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    // ใช้ imageUrl ที่ได้จาก Apps Script
                     submissionData = {
                         productName,
                         loveMessage,
                         phoneNumber,
-                        imageUrl: result.imageUrl,
+                        imageUrl: result.data.imageUrl, // แก้ไขตรงนี้ให้รับค่าจาก result.data.imageUrl
                         displayName: liffProfile?.displayName || 'ผู้ใช้ทดสอบ'
                     };
 
@@ -309,17 +310,12 @@
                 altText: 'ข้อความวันแม่',
                 contents: {
                     type: 'bubble',
-                    header: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            {
-                                type: 'text',
-                                text: '💖 ข้อความวันแม่',
-                                weight: 'bold',
-                                color: '#FF69B4'
-                            }
-                        ]
+                    hero: {
+                        type: 'image',
+                        url: submissionData.imageUrl, // ใช้ imageUrl ที่ได้จาก GAS
+                        size: 'full',
+                        aspectRatio: '20:13',
+                        aspectMode: 'cover'
                     },
                     body: {
                         type: 'box',
@@ -327,15 +323,27 @@
                         contents: [
                             {
                                 type: 'text',
+                                text: `💖 ข้อความวันแม่จากคุณ ${submissionData.displayName}`,
+                                weight: 'bold',
+                                color: '#FF69B4',
+                                size: 'md',
+                                wrap: true
+                            },
+                            {
+                                type: 'text',
                                 text: `ผลิตภัณฑ์: ${submissionData.productName}`,
                                 wrap: true,
-                                margin: 'md'
+                                margin: 'md',
+                                color: '#666666',
+                                size: 'sm'
                             },
                             {
                                 type: 'text',
                                 text: `ข้อความ: ${submissionData.loveMessage}`,
                                 wrap: true,
-                                margin: 'md'
+                                margin: 'md',
+                                color: '#666666',
+                                size: 'sm'
                             }
                         ]
                     }
@@ -366,6 +374,10 @@
                 liff.shareTargetPicker([{
                     type: 'text',
                     text: shareText
+                }, {
+                    type: 'image',
+                    originalContentUrl: submissionData.imageUrl, // ใช้ imageUrl ที่ได้จาก GAS
+                    previewImageUrl: submissionData.imageUrl // ใช้ imageUrl ที่ได้จาก GAS
                 }]);
             } else {
                 navigator.clipboard.writeText(shareText);
