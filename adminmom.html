@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดแอดมิน - กิจกรรมวันแม่</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pink-mother': '#FF69B4'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-pink-mother to-red-400 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold"><i class="fas fa-tachometer-alt mr-3"></i>แดชบอร์ดแอดมิน</h1>
+                    <p class="text-pink-100 mt-1">จัดการกิจกรรมวันแม่</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm opacity-90">อัปเดตล่าสุด</p>
+                    <p id="lastUpdated" class="font-semibold">-</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">ผู้เข้าร่วมทั้งหมด</p>
+                        <p id="totalSubmissions" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-share-alt text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">การแชร์ทั้งหมด</p>
+                        <p id="totalShares" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i class="fab fa-facebook text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Facebook แชร์</p>
+                        <p id="facebookShares" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fab fa-line text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">LINE แชร์</p>
+                        <p id="lineShares" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Top Products Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-pink-mother"></i>ผลิตภัณฑ์ยอดนิยม
+                </h3>
+                <div class="h-64">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Share Distribution Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie mr-2 text-pink-mother"></i>การแชร์ตามแพลตฟอร์ม
+                </h3>
+                <div class="h-64">
+                    <canvas id="shareDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <button id="refreshBtn" 
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center">
+                <i class="fas fa-sync-alt mr-2"></i>รีเฟรชข้อมูล
+            </button>
+            
+            <button id="exportBtn" 
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center">
+                <i class="fas fa-download mr-2"></i>ส่งออกข้อมูล
+            </button>
+            
+            <button id="viewTableBtn" 
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center">
+                <i class="fas fa-table mr-2"></i>ดูตารางข้อมูล
+            </button>
+        </div>
+
+        <!-- Data Table -->
+        <div id="dataTableSection" class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-pink-mother to-red-400">
+                <h3 class="text-lg font-bold text-white">
+                    <i class="fas fa-list mr-2"></i>ข้อมูลผู้เข้าร่วมกิจกรรม
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- Search and Filter -->
+                <div class="mb-4 flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" 
+                            placeholder="ค้นหาชื่อ, ผลิตภัณฑ์, หรือข้อความ..." 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother">
+                    </div>
+                    <div>
+                        <select id="filterSelect" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother">
+                            <option value="">ทั้งหมด</option>
+                            <option value="today">วันนี้</option>
+                            <option value="week">สัปดาห์นี้</option>
+                            <option value="month">เดือนนี้</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อผู้ใช้</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผลิตภัณฑ์</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ข้อความ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">โทรศัพท์</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รูปภาพ</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">แชร์</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="mt-6 flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        แสดง <span id="showingStart">0</span> - <span id="showingEnd">0</span> จาก <span id="totalRecords">0</span> รายการ
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevBtn" class="px-3 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">ก่อนหน้า</button>
+                        <span id="currentPage" class="px-3 py-1 bg-pink-mother text-white rounded">1</span>
+                        <button id="nextBtn" class="px-3 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 disabled:opacity-50">ถัดไป</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-mother mx-auto mb-4"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let topProductsChart = null;
+        let shareDistributionChart = null;
+
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuAgmG-CK6_pd0Syh6Le67pQXX8z39FABhP2P1lZzSqtFvEVoijTOnDQ0y_VF2q0TznQ/exec';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadDashboardData();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('viewTableBtn').addEventListener('click', toggleDataTable);
+            document.getElementById('searchInput').addEventListener('input', filterData);
+            document.getElementById('filterSelect').addEventListener('change', filterData);
+            document.getElementById('prevBtn').addEventListener('click', () => changePage(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => changePage(1));
+        }
+
+        async function loadDashboardData() {
+            showLoading(true);
+            try {
+                // Load statistics
+                const statsResponse = await fetch(`${GAS_URL}?action=getStats`);
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    updateStatistics(statsData.data);
+                }
+
+                // Load detailed data
+                const dataResponse = await fetch(`${GAS_URL}?action=viewData`);
+                const data = await dataResponse.json();
+                
+                if (data.success) {
+                    allData = data.data || [];
+                    filteredData = [...allData];
+                    renderDataTable();
+                    updateCharts();
+                }
+
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleString('th-TH');
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateStatistics(stats) {
+            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 0;
+            document.getElementById('totalShares').textContent = stats.totalShares || 0;
+            document.getElementById('facebookShares').textContent = stats.facebookShares || 0;
+            document.getElementById('lineShares').textContent = stats.lineShares || 0;
+        }
+
+        function updateCharts() {
+            // Update top products chart
+            const productCounts = {};
+            allData.forEach(item => {
+                const product = item['ชื่อผลิตภัณฑ์'] || item.productName || 'ไม่ระบุ';
+                productCounts[product] = (productCounts[product] || 0) + 1;
+            });
+
+            const topProducts = Object.entries(productCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            updateTopProductsChart(topProducts);
+
+            // Update share distribution chart
+            const facebookShares = parseInt(document.getElementById('facebookShares').textContent) || 0;
+            const lineShares = parseInt(document.getElementById('lineShares').textContent) || 0;
+            
+            updateShareDistributionChart(facebookShares, lineShares);
+        }
+
+        function updateTopProductsChart(data) {
+            const ctx = document.getElementById('topProductsChart').getContext('2d');
+            
+            if (topProductsChart) {
+                topProductsChart.destroy();
+            }
+
+            topProductsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item[0]),
+                    datasets: [{
+                        label: 'จำนวน',
+                        data: data.map(item => item[1]),
+                        backgroundColor: 'rgba(255, 105, 180, 0.6)',
+                        borderColor: 'rgba(255, 105, 180, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateShareDistributionChart(facebookShares, lineShares) {
+            const ctx = document.getElementById('shareDistributionChart').getContext('2d');
+            
+            if (shareDistributionChart) {
+                shareDistributionChart.destroy();
+            }
+
+            shareDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Facebook', 'LINE'],
+                    datasets: [{
+                        data: [facebookShares, lineShares],
+                        backgroundColor: [
+                            '#1877F2',
+                            '#06C755'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterValue = document.getElementById('filterSelect').value;
+            
+            filteredData = allData.filter(item => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    (item['ชื่อผู้ใช้'] && item['ชื่อผู้ใช้'].toLowerCase().includes(searchTerm)) ||
+                    (item['ชื่อผลิตภัณฑ์'] && item['ชื่อผลิตภัณฑ์'].toLowerCase().includes(searchTerm)) ||
+                    (item['ข้อความรักแม่'] && item['ข้อความรักแม่'].toLowerCase().includes(searchTerm));
+                
+                // Date filter
+                if (filterValue && item['วันที่']) {
+                    const itemDate = new Date(item['วันที่']);
+                    const now = new Date();
+                    
+                    let matchesDateFilter = true;
+                    switch (filterValue) {
+                        case 'today':
+                            matchesDateFilter = itemDate.toDateString() === now.toDateString();
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            matchesDateFilter = itemDate >= weekAgo;
+                            break;
+                        case 'month':
+                            matchesDateFilter = itemDate.getMonth() === now.getMonth() && 
+                                               itemDate.getFullYear() === now.getFullYear();
+                            break;
+                    }
+                    return matchesSearch && matchesDateFilter;
+                }
+                
+                return matchesSearch;
+            });
+            
+            currentPage = 1;
+            renderDataTable();
+        }
+
+        function renderDataTable() {
+            const tbody = document.getElementById('dataTableBody');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = '';
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+            } else {
+                pageData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    
+                    // Format date
+                    const date = item['วันที่'] ? new Date(item['วันที่']).toLocaleDateString('th-TH') : '-';
+                    
+                    // Truncate long text
+                    const truncateText = (text, maxLength = 50) => {
+                        if (!text) return '-';
+                        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                    };
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-4 text-sm text-gray-900">${date}</td>
+                        <td class="px-4 py-4 text-sm text-gray-900">${item['ชื่อผู้ใช้'] || '-'}</td>
+                        <td class="px-4 py-4 text-sm text-gray-900">${truncateText(item['ชื่อผลิตภัณฑ์'])}</td>
+                        <td class="px-4 py-4 text-sm text-gray-900">${truncateText(item['ข้อความรักแม่'])}</td>
+                        <td class="px-4 py-4 text-sm text-gray-900">${item['เบอร์โทรศัพท์'] || '-'}</td>
+                        <td class="px-4 py-4 text-sm text-gray-900">
+                            ${item['รูปผลิตภัณฑ์'] ? 
+                                `<a href="${item['รูปผลิตภัณฑ์']}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-image"></i> ดูรูป
+                                </a>` : '-'
+                            }
+                        </td>
+                        <td class="px-4 py-4 text-sm text-gray-900">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ${item['จำนวนแชร์'] || 0} ครั้ง
+                            </span>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            
+            document.getElementById('showingStart').textContent = filteredData.length > 0 ? startIndex + 1 : 0;
+            document.getElementById('showingEnd').textContent = endIndex;
+            document.getElementById('totalRecords').textContent = filteredData.length;
+            document.getElementById('currentPage').textContent = currentPage;
+            
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+            
+            prevBtn.classList.toggle('opacity-50', prevBtn.disabled);
+            nextBtn.classList.toggle('opacity-50', nextBtn.disabled);
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderDataTable();
+            }
+        }
+
+        function toggleDataTable() {
+            const tableSection = document.getElementById('dataTableSection');
+            const isVisible = !tableSection.classList.contains('hidden');
+            
+            if (isVisible) {
+                tableSection.classList.add('hidden');
+                document.getElementById('viewTableBtn').innerHTML = '<i class="fas fa-table mr-2"></i>แสดงตารางข้อมูล';
+            } else {
+                tableSection.classList.remove('hidden');
+                document.getElementById('viewTableBtn').innerHTML = '<i class="fas fa-eye-slash mr-2"></i>ซ่อนตารางข้อมูล';
+                if (allData.length === 0) {
+                    loadDashboardData();
+                }
+            }
+        }
+
+        async function exportData() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${GAS_URL}?action=exportCsv`);
+                const result = await response.json();
+                
+                if (result.success && result.data.downloadUrl) {
+                    // Create a temporary link to download the file
+                    const link = document.createElement('a');
+                    link.href = result.data.downloadUrl;
+                    link.download = `mothers_day_data_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    alert('ส่งออกข้อมูลสำเร็จ!');
+                } else {
+                    throw new Error(result.message || 'ไม่สามารถส่งออกข้อมูลได้');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('เกิดข้อผิดพลาดในการส่งออกข้อมูล');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            const modal = document.getElementById('loadingModal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Real-time updates every 30 seconds
+        setInterval(() => {
+            loadDashboardData();
+        }, 30000);
+
+        // Initialize with table hidden
+        document.getElementById('dataTableSection').classList.add('hidden');
+    </script>
+
+    <style>
+        /* Custom scrollbar for table */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #FF69B4;
+            border-radius: 4px;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+            background: #e91e63;
+        }
+
+        /* Animation for stats cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .grid > div {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .grid > div:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .grid > div:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .grid > div:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        /* Hover effects for buttons */
+        button {
+            transform: translateY(0);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Loading animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Table row hover animation */
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        /* Chart container styling */
+        canvas {
+            max-height: 300px !important;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .lg\\:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .lg\\:grid-cols-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .overflow-x-auto {
+                font-size: 0.875rem;
+            }
+            
+            .px-4 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .bg-gradient-to-r {
+                background: #FF69B4 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            .shadow-lg,
+            .shadow-md {
+                box-shadow: none !important;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+    </style>
+</body>
+</html>
