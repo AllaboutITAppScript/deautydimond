@@ -29,7 +29,6 @@
             <p class="text-sm opacity-90">แสดงความรักให้แม่ผ่านผลิตภัณฑ์ของเรา</p>
         </div>
     </div>
-
     <div id="profileSection" class="container mx-auto p-4 hidden">
         <div class="bg-white rounded-lg shadow-md p-4 mb-4">
             <div class="flex items-center space-x-4">
@@ -41,7 +40,6 @@
             </div>
         </div>
     </div>
-
     <div class="container mx-auto p-4">
         <form id="mothersDayForm" class="bg-white rounded-lg shadow-lg p-6">
             <div class="mb-6">
@@ -60,83 +58,75 @@
                     </div>
                 </div>
             </div>
-
             <div class="mb-6">
                 <label for="loveMessage" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-heart mr-2"></i>ข้อความบอกรักแม่
                 </label>
-                <textarea id="loveMessage" rows="4" 
+                <textarea id="loveMessage" rows="4"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother resize-none"
                     placeholder="เขียนข้อความบอกรักแม่ของคุณ..."></textarea>
                 <p class="text-sm text-gray-500 mt-1">
                     <span id="charCount">0</span>/200 ตัวอักษร
                 </p>
             </div>
-
             <div class="mb-6">
                 <label for="productName" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-tag mr-2"></i>ชื่อผลิตภัณฑ์ที่ซื้อ
                 </label>
-                <input type="text" id="productName" 
+                <input type="text" id="productName"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother"
                     placeholder="ระบุชื่อผลิตภัณฑ์">
             </div>
-
             <div class="mb-6">
                 <label for="phoneNumber" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-phone mr-2"></i>เบอร์โทรศัพท์
                 </label>
-                <input type="tel" id="phoneNumber" 
+                <input type="tel" id="phoneNumber"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother"
                     placeholder="เบอร์โทรศัพท์สำหรับติดต่อ">
             </div>
-
-            <button type="submit" id="submitBtn" 
+            <button type="submit" id="submitBtn"
                 class="w-full bg-gradient-to-r from-pink-mother to-red-400 text-white font-bold py-3 px-4 rounded-lg hover:from-pink-600 hover:to-red-500 transition duration-300">
                 <i class="fas fa-paper-plane mr-2"></i>ส่งข้อมูล
             </button>
         </form>
-
         <div id="shareSection" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4 text-center">
                 <i class="fas fa-share-alt mr-2"></i>แชร์ความรักให้แม่
             </h3>
-            
+
             <div class="space-y-4">
-                <button id="shareLineBtn" 
+                <button id="shareLineBtn"
                     class="w-full bg-line-green text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition duration-300">
                     <i class="fab fa-line mr-2"></i>แชร์ใน LINE
                 </button>
-
-                <button id="shareFacebookBtn" 
+                <button id="shareFacebookBtn"
                     class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
                     <i class="fab fa-facebook-f mr-2"></i>แชร์ใน Facebook
                 </button>
             </div>
         </div>
-
         <div id="adminPanel" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4">
                 <i class="fas fa-cog mr-2"></i>ตรวจสอบข้อมูล
             </h3>
-            <button id="viewDataBtn" 
+            <button id="viewDataBtn"
                 class="w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-300">
                 <i class="fas fa-table mr-2"></i>ดูข้อมูลทั้งหมด
             </button>
         </div>
     </div>
-
     <script>
         // Global variables
         let liffProfile = null;
         let selectedImage = null;
         let submissionData = null;
-        
+
         // LIFF Configuration
         const LIFF_ID = '1657132355-ZdM6EdWK';
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuAgmG-CK6_pd0Syh6Le67pQXX8z39FABhP2P1lZzSqtFvEVoijTOnDQ0y_VF2q0TznQ/exec';
         const HASHTAGS = '#วันแม่2025 #แสดงความรักแม่ #รักแม่ #MothersDay2025';
-        
+
         // Initialize LIFF
         window.onload = function() {
             initializeLiff();
@@ -146,7 +136,7 @@
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                
+
                 if (liff.isLoggedIn()) {
                     await loadProfile();
                 } else {
@@ -165,7 +155,7 @@
             try {
                 const profile = await liff.getProfile();
                 liffProfile = profile;
-                
+
                 document.getElementById('profilePicture').src = profile.pictureUrl || '';
                 document.getElementById('displayName').textContent = profile.displayName;
                 document.getElementById('userId').textContent = profile.userId;
@@ -183,17 +173,17 @@
         function setupEventListeners() {
             // Image upload
             document.getElementById('productImage').addEventListener('change', handleImageUpload);
-            
+
             // Character count for message
             document.getElementById('loveMessage').addEventListener('input', updateCharCount);
-            
+
             // Form submission
             document.getElementById('mothersDayForm').addEventListener('submit', handleSubmit);
-            
+
             // Share buttons
             document.getElementById('shareLineBtn').addEventListener('click', shareToLine);
             document.getElementById('shareFacebookBtn').addEventListener('click', shareToFacebook);
-            
+
             // Admin panel
             document.getElementById('viewDataBtn').addEventListener('click', viewAllData);
         }
@@ -227,7 +217,7 @@
 
         async function handleSubmit(event) {
             event.preventDefault();
-            
+
             const productName = document.getElementById('productName').value;
             const loveMessage = document.getElementById('loveMessage').value;
             const phoneNumber = document.getElementById('phoneNumber').value;
@@ -275,7 +265,7 @@
                 }
 
                 const result = await response.json();
-                
+
                 if (result.success) {
                     submissionData = {
                         productName,
@@ -285,15 +275,10 @@
                         displayName: liffProfile?.displayName || 'ผู้ใช้ทดสอบ'
                     };
 
-                    // Send message to LINE chat if API is available
-                    if (liff.isApiAvailable('sendMessages')) {
-                        await sendMessageToLine();
-                    }
-                    
                     // Show share section
                     document.getElementById('shareSection').classList.remove('hidden');
                     document.getElementById('mothersDayForm').style.display = 'none';
-                    
+
                     Swal.fire({
                         icon: 'success',
                         title: 'บันทึกข้อมูลสำเร็จ!',
@@ -314,61 +299,6 @@
             }
         }
 
-        async function sendMessageToLine() {
-            if (!liff.isApiAvailable('sendMessages') || !submissionData) return;
-
-            const message = {
-                type: 'flex',
-                altText: 'ข้อความวันแม่',
-                contents: {
-                    type: 'bubble',
-                    hero: {
-                        type: 'image',
-                        url: submissionData.imageUrl,
-                        size: 'full',
-                        aspectRatio: '20:13',
-                        aspectMode: 'cover'
-                    },
-                    body: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            {
-                                type: 'text',
-                                text: `💖 ข้อความวันแม่จากคุณ ${submissionData.displayName}`,
-                                weight: 'bold',
-                                color: '#FF69B4',
-                                size: 'md',
-                                wrap: true
-                            },
-                            {
-                                type: 'text',
-                                text: `ผลิตภัณฑ์: ${submissionData.productName}`,
-                                wrap: true,
-                                margin: 'md',
-                                color: '#666666',
-                                size: 'sm'
-                            },
-                            {
-                                type: 'text',
-                                text: `ข้อความ: ${submissionData.loveMessage}`,
-                                wrap: true,
-                                margin: 'md',
-                                color: '#666666',
-                                size: 'sm'
-                            }
-                        ]
-                    }
-                }
-            };
-
-            try {
-                await liff.sendMessages([message]);
-            } catch (error) {
-                console.error('Failed to send message:', error);
-            }
-        }
-
         function shareToLine() {
             if (!submissionData) {
                 Swal.fire({
@@ -379,9 +309,9 @@
                 });
                 return;
             }
-            
+
             const shareText = `💖 ${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
-            
+
             if (liff.isApiAvailable('shareTargetPicker')) {
                 liff.shareTargetPicker([{
                     type: 'text',
@@ -413,13 +343,13 @@
                 });
                 return;
             }
-            
+
             const shareText = `${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
             const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
-            
+
             // Track Facebook share
             trackShare('facebook', fbUrl);
-            
+
             window.open(fbUrl, '_blank', 'width=600,height=400');
         }
 
@@ -431,7 +361,6 @@
                 formData.append('platform', platform);
                 formData.append('shareUrl', shareUrl);
                 formData.append('timestamp', new Date().toISOString());
-
                 await fetch(GAS_URL, {
                     method: 'POST',
                     body: formData
@@ -453,16 +382,16 @@
                 });
 
                 const response = await fetch(`${GAS_URL}?action=viewData`);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     const tableHtml = generateDataTable(data.data);
-                    
+
                     Swal.fire({
                         title: 'ข้อมูลกิจกรรมวันแม่',
                         width: '90%',
@@ -520,7 +449,6 @@
             html += '</tbody></table>';
             return html;
         }
-
     </script>
 </body>
 </html>
