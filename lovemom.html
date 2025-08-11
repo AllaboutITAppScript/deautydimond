@@ -297,14 +297,14 @@
                         confirmButtonColor: '#FF69B4'
                     });
                 } else {
-                    throw new Error(result.message || 'เกิดข้อผิดพลาด');
+                    throw new Error(result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
                 }
             } catch (error) {
                 console.error('Submission error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง: ' + error.message,
+                    text: 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message,
                     confirmButtonColor: '#FF69B4'
                 });
             }
@@ -503,7 +503,6 @@
                 html += `<td>${row['ชื่อผลิตภัณฑ์'] || ''}</td>`;
                 html += `<td>${row['ข้อความรักแม่'] || ''}</td>`;
                 html += `<td>${row['เบอร์โทรศัพท์'] || ''}</td>`;
-                // ใช้รูปโปรไฟล์แทน imageUrl ในตารางแสดงผล
                 html += `<td>${row['รูปผลิตภัณฑ์'] ? `<img src="${row['รูปผลิตภัณฑ์']}" alt="Product">` : ''}</td>`;
                 html += `<td>${row['จำนวนแชร์'] || 0} ครั้ง</td>`;
                 html += '</tr>';
