@@ -154,7 +154,7 @@
                 }
             } catch (error) {
                 console.error('LIFF initialization failed:', error);
-                // For testing without LIFF
+                // Fallback for local testing without LIFF
                 document.getElementById('profileSection').classList.remove('hidden');
                 document.getElementById('displayName').textContent = 'ผู้ใช้ทดสอบ';
                 document.getElementById('userId').textContent = 'test-user-id';
@@ -171,8 +171,8 @@
                 document.getElementById('userId').textContent = profile.userId;
                 document.getElementById('profileSection').classList.remove('hidden');
 
-                // ตรวจสอบว่าเป็น Admin
-                if (profile.userId === 'admin-user-id') { // เปลี่ยน 'admin-user-id' เป็น User ID ของแอดมิน
+                // Check for Admin user
+                if (profile.userId === 'admin-user-id') { // Change 'admin-user-id' to your actual admin User ID
                     document.getElementById('adminPanel').classList.remove('hidden');
                 }
             } catch (error) {
@@ -270,6 +270,10 @@
                     body: formData
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 
                 if (result.success) {
@@ -281,7 +285,7 @@
                         displayName: liffProfile?.displayName || 'ผู้ใช้ทดสอบ'
                     };
 
-                    // Send message to LINE chat
+                    // Send message to LINE chat if API is available
                     if (liff.isApiAvailable('sendMessages')) {
                         await sendMessageToLine();
                     }
@@ -304,7 +308,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message,
+                    text: `ไม่สามารถบันทึกข้อมูลได้: ${error.message}`,
                     confirmButtonColor: '#FF69B4'
                 });
             }
@@ -449,6 +453,11 @@
                 });
 
                 const response = await fetch(`${GAS_URL}?action=viewData`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 
                 if (data.success) {
@@ -481,7 +490,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
+                    text: `เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`,
                     confirmButtonColor: '#FF69B4'
                 });
             }
