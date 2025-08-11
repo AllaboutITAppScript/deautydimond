@@ -1,2053 +1,454 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ตัวจัดการ Rich Menu, คำสั่งกำหนดเอง และคูปอง (Firebase)</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Firebase CDN -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Kanit', sans-serif;
-      background-color: #f8fafc;
-    }
-    .gradient-bg {
-      background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
-    }
-    .card-shadow {
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .smooth-transition {
-      transition: all 0.3s ease;
-    }
-    .table-row:hover {
-      background-color: #f8fafc;
-    }
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #c7d2fe;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #a5b4fc;
-    }
-    .tab-active {
-      border-bottom: 3px solid #4f46e5;
-      color: #4f46e5;
-      font-weight: 500;
-    }
-    .json-preview {
-      max-height: 150px;
-      overflow-y: auto;
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      padding: 0.5rem;
-      font-family: monospace;
-      font-size: 0.875rem;
-      white-space: pre-wrap;
-    }
-    .bot-profile-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .bot-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid white;
-      object-fit: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #4f46e5;
-      font-size: 1.5rem;
-      overflow: hidden;
-    }
-    .bot-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .bot-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .bot-name {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    .bot-label {
-      font-size: 0.8rem;
-      opacity: 0.9;
-    }
-    .bot-status {
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.2);
-      margin-top: 4px;
-    }
-    .profile-loading {
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
-    }
-    .firebase-status {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 10px 15px;
-      border-radius: 8px;
-      color: white;
-      font-size: 14px;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .firebase-connected {
-      background-color: #10b981;
-    }
-    .firebase-disconnected {
-      background-color: #ef4444;
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    .status-active {
-      background-color: #dcfce7;
-      color: #15803d;
-    }
-    .status-expired {
-      background-color: #fef2f2;
-      color: #dc2626;
-    }
-    .status-blocked {
-      background-color: #fef2f2;
-      color: #b91c1c;
-    }
-    .checkbox-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.875rem;
-    }
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #e2e8f0;
-      color: #4f46e5;
-      font-size: 1.2rem;
-      overflow: hidden;
-    }
-    .user-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .coupon-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      background-color: #fce7f3;
-      color: #9d174d;
-    }
-    .btn-disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    .field-disabled {
-      background-color: #f3f4f6;
-      cursor: not-allowed;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กิจกรรมวันแม่ - แสดงความรักให้แม่</title>
+    <script src="https://static.line-scdn.net/liff/edge/versions/2.21.4/sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'line-green': '#06C755',
+                        'pink-mother': '#FF69B4'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="min-h-screen">
-  <!-- สถานะ Firebase -->
-  <div id="firebaseStatus" class="firebase-status firebase-disconnected">
-    <i class="fas fa-database"></i>
-    <span>กำลังเชื่อมต่อ Firebase...</span>
-  </div>
-
-  <!-- หน้าจอโหลดข้อมูล -->
-  <div id="loadingScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
-    <div class="text-center">
-      <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-      <p class="mt-4 text-lg font-medium text-gray-700">กำลังโหลดข้อมูล...</p>
+<body class="bg-gradient-to-br from-pink-50 to-pink-100 min-h-screen">
+    <div class="bg-gradient-to-r from-pink-mother to-red-400 text-white p-4 shadow-lg">
+        <div class="container mx-auto text-center">
+            <i class="fas fa-heart text-3xl mb-2"></i>
+            <h1 class="text-2xl font-bold">กิจกรรมวันแม่</h1>
+            <p class="text-sm opacity-90">แสดงความรักให้แม่ผ่านผลิตภัณฑ์ของเรา</p>
+        </div>
     </div>
-  </div>
-
-  <!-- เนื้อหาหลัก -->
-  <div class="container mx-auto px-4 py-8">
-    <!-- ส่วนหัว -->
-    <div class="gradient-bg text-white rounded-xl p-6 mb-6 card-shadow">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div class="flex items-center space-x-4">
-          <!-- ส่วนโปรไฟล์บอท -->
-          <div class="bot-profile-container">
-            <div id="botAvatar" class="bot-avatar profile-loading">
-              <i class="fas fa-robot"></i>
+    <div id="profileSection" class="container mx-auto p-4 hidden">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+            <div class="flex items-center space-x-4">
+                <img id="profilePicture" src="" alt="Profile" class="w-16 h-16 rounded-full">
+                <div>
+                    <h3 id="displayName" class="font-bold text-lg"></h3>
+                    <p id="userId" class="text-gray-500 text-sm"></p>
+                </div>
             </div>
-            <div class="bot-info">
-              <div id="botName" class="bot-name profile-loading" style="width: 120px; height: 20px; border-radius: 4px;"></div>
-              <div id="botStatus" class="bot-status profile-loading" style="width: 80px; height: 16px; border-radius: 4px;"></div>
-            </div>
-          </div>
-          
-          <div class="border-l border-white border-opacity-30 h-16 ml-4"></div>
-          
-          <div>
-            <h1 class="text-3xl font-bold">
-              <i class="fas fa-bars mr-3"></i>ตัวจัดการ Webhook LineBoT
-            </h1>
-            <p class="mt-2 opacity-90">จัดการ Rich Menu, คำสั่งกำหนดเอง, คูปอง และข้อมูลผู้ใช้สำหรับ LINE Bot (Firebase)</p>
-          </div>
         </div>
-        
-        <div class="flex gap-3 mt-4 md:mt-0">
-          <button id="configBtn" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 smooth-transition">
-            <i class="fas fa-cog mr-2"></i>ตั้งค่า
-          </button>
-          <button id="refreshBtn" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 smooth-transition">
-            <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
-          </button>
-        </div>
-      </div>
     </div>
-
-    <!-- แท็บเมนู -->
-    <div class="bg-white rounded-t-xl border-b border-gray-200 px-4 py-3 card-shadow">
-      <div class="flex">
-        <button id="richmenuTab" class="tab-button tab-active px-4 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 smooth-transition">
-          <i class="fas fa-bars mr-2"></i>Rich Menu
-        </button>
-        <button id="customTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 smooth-transition">
-          <i class="fas fa-code mr-2"></i>คำสั่งกำหนดเอง
-        </button>
-        <button id="couponTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 smooth-transition">
-          <i class="fas fa-ticket-alt mr-2"></i>คูปอง
-        </button>
-        <button id="userTab" class="tab-button px-4 py-2 text-sm font-medium text-gray-600 hover:text-indigo-600 smooth-transition">
-          <i class="fas fa-users mr-2"></i>ข้อมูลผู้ใช้
-        </button>
-      </div>
-    </div>
-
-    <!-- เนื้อหา Richmenu -->
-    <div id="richmenuContent" class="bg-white rounded-b-xl p-6 card-shadow">
-      <!-- ปุ่มดำเนินการ -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <button id="addRichmenuBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 smooth-transition">
-            <i class="fas fa-plus-circle mr-2"></i>เพิ่ม Rich Menu ใหม่
-          </button>
-        </div>
-        <div class="text-sm text-gray-500">
-          <i class="fas fa-info-circle mr-1"></i>พบทั้งหมด <span id="richmenuCount" class="font-medium">0</span> รายการ
-        </div>
-      </div>
-
-      <!-- ตารางข้อมูล -->
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คีย์เวิร์ด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Richmenu ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันหมดอายุ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody id="richmenuTable" class="bg-white divide-y divide-gray-200">
-            <!-- ข้อมูล Richmenu จะถูกโหลดที่นี่ -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- สถานะไม่มีข้อมูล -->
-      <div id="richmenuEmpty" class="text-center py-12 hidden">
-        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
-        <h3 class="text-lg font-medium text-gray-500">ไม่มีข้อมูล Rich Menu</h3>
-        <p class="mt-1 text-sm text-gray-400">คลิกที่ปุ่ม "เพิ่ม Rich Menu ใหม่" เพื่อเริ่มต้น</p>
-      </div>
-    </div>
-
-    <!-- เนื้อหาคำสั่งกำหนดเอง -->
-    <div id="customContent" class="bg-white rounded-b-xl p-6 card-shadow hidden">
-      <!-- ปุ่มดำเนินการ -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <button id="addCustomBtn" class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 smooth-transition">
-            <i class="fas fa-plus-circle mr-2"></i>เพิ่มคำสั่งกำหนดเองใหม่
-          </button>
-        </div>
-        <div class="text-sm text-gray-500">
-          <i class="fas fa-info-circle mr-1"></i>พบทั้งหมด <span id="customCount" class="font-medium">0</span> รายการ
-        </div>
-      </div>
-
-      <!-- ตารางข้อมูล -->
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คีย์เวิร์ด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คำสั่ง JSON</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันหมดอายุ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody id="customTable" class="bg-white divide-y divide-gray-200">
-            <!-- ข้อมูลคำสั่งกำหนดเองจะถูกโหลดที่นี่ -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- สถานะไม่มีข้อมูล -->
-      <div id="customEmpty" class="text-center py-12 hidden">
-        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
-        <h3 class="text-lg font-medium text-gray-500">ไม่มีข้อมูลคำสั่งกำหนดเอง</h3>
-        <p class="mt-1 text-sm text-gray-400">คลิกที่ปุ่ม "เพิ่มคำสั่งกำหนดเองใหม่" เพื่อเริ่มต้น</p>
-      </div>
-    </div>
-
-    <!-- เนื้อหาคูปอง -->
-    <div id="couponContent" class="bg-white rounded-b-xl p-6 card-shadow hidden">
-      <!-- ปุ่มดำเนินการ -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <button id="addCouponBtn" class="bg-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-pink-700 smooth-transition">
-            <i class="fas fa-plus-circle mr-2"></i>เพิ่มคูปองใหม่
-          </button>
-        </div>
-        <div class="text-sm text-gray-500">
-          <i class="fas fa-info-circle mr-1"></i>พบทั้งหมด <span id="couponCount" class="font-medium">0</span> รายการ
-        </div>
-      </div>
-
-      <!-- ตารางข้อมูล -->
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คีย์เวิร์ด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อคูปอง</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายละเอียด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ส่วนลด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันหมดอายุ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody id="couponTable" class="bg-white divide-y divide-gray-200">
-            <!-- ข้อมูลคูปองจะถูกโหลดที่นี่ -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- สถานะไม่มีข้อมูล -->
-      <div id="couponEmpty" class="text-center py-12 hidden">
-        <i class="fas fa-ticket-alt text-4xl text-gray-300 mb-4"></i>
-        <h3 class="text-lg font-medium text-gray-500">ไม่มีข้อมูลคูปอง</h3>
-        <p class="mt-1 text-sm text-gray-400">คลิกที่ปุ่ม "เพิ่มคูปองใหม่" เพื่อเริ่มต้น</p>
-      </div>
-    </div>
-
-    <!-- เนื้อหาข้อมูลผู้ใช้ -->
-    <div id="userContent" class="bg-white rounded-b-xl p-6 card-shadow hidden">
-      <!-- ปุ่มดำเนินการ -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div class="text-sm text-gray-500">
-          <i class="fas fa-info-circle mr-1"></i>พบทั้งหมด <span id="userCount" class="font-medium">0</span> รายการ
-        </div>
-      </div>
-
-      <!-- ตารางข้อมูล -->
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รูปโปรไฟล์</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เข้าร่วมเมื่อ</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ใช้งานล่าสุด</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คีย์เวิร์ดที่อนุญาต</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody id="userTable" class="bg-white divide-y divide-gray-200">
-            <!-- ข้อมูลผู้ใช้จะถูกโหลดที่นี่ -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- สถานะไม่มีข้อมูล -->
-      <div id="userEmpty" class="text-center py-12 hidden">
-        <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
-        <h3 class="text-lg font-medium text-gray-500">ไม่มีข้อมูลผู้ใช้</h3>
-        <p class="mt-1 text-sm text-gray-400">ไม่มีผู้ใช้ในระบบในขณะนี้</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ส่วนท้ายเว็บ -->
-  <footer class="bg-gray-100 py-6 mt-12">
-    <div class="container mx-auto px-4 text-center">
-      <p class="text-gray-600 text-sm">
-        พัฒนาโดย <span class="font-semibold text-indigo-600">ครบเครื่องเรื่องไอที</span> - ใช้งานกับ Firebase
-      </p>
-      <p class="text-gray-500 text-xs mt-2">
-        &copy; 2025 สงวนลิขสิทธิ์
-      </p>
-    </div>
-  </footer>
-
-  <!-- โมดอลตั้งค่า -->
-  <div id="configModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">ตั้งค่า LINE Bot</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">LINE Channel Access Token</label>
-              <input type="password" id="accessToken" placeholder="Access Token ของ LINE Bot"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-              <p class="mt-1 text-xs text-gray-500">จำเป็นสำหรับการเชื่อมต่อกับ LINE API</p>
+    <div class="container mx-auto p-4">
+        <form id="mothersDayForm" class="bg-white rounded-lg shadow-lg p-6">
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-camera mr-2"></i>อัปโหลดรูปผลิตภัณฑ์
+                </label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <input type="file" id="productImage" accept="image/*" class="hidden">
+                    <div id="uploadArea" class="cursor-pointer" onclick="document.getElementById('productImage').click()">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">คลิกเพื่อเลือกรูปภาพ</p>
+                    </div>
+                    <div id="imagePreview" class="hidden">
+                        <img id="previewImg" src="" alt="Preview" class="max-w-full h-40 mx-auto rounded">
+                        <p class="text-sm text-gray-500 mt-2">คลิกเพื่อเปลี่ยนรูป</p>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button id="saveConfigBtn" type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-            บันทึก
-          </button>
-          <button id="cancelConfigBtn" type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- โมดอลเพิ่ม/แก้ไข Richmenu -->
-  <div id="richmenuModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <h3 id="richmenuModalTitle" class="text-lg font-medium text-gray-900 mb-4"></h3>
-          <form id="richmenuForm" class="space-y-4">
-            <input type="hidden" id="richmenuIdField">
-            <div>
-              <label for="keyword" class="block text-sm font-medium text-gray-700 mb-1">คีย์เวิร์ด</label>
-              <input type="text" id="richmenuKeyword" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-              <p class="mt-1 text-xs text-gray-500">คำที่ใช้ในการเรียก Rich Menu นี้ (ต้องไม่ซ้ำ)</p>
+            <div class="mb-6">
+                <label for="loveMessage" class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-heart mr-2"></i>ข้อความบอกรักแม่
+                </label>
+                <textarea id="loveMessage" rows="4"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother resize-none"
+                    placeholder="เขียนข้อความบอกรักแม่ของคุณ..."></textarea>
+                <p class="text-sm text-gray-500 mt-1">
+                    <span id="charCount">0</span>/200 ตัวอักษร
+                </p>
             </div>
-            <div>
-              <label for="richmenuId" class="block text-sm font-medium text-gray-700 mb-1">Richmenu ID</label>
-              <input type="text" id="richmenuRichmenuId" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="richmenu-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-              <p class="mt-1 text-xs text-gray-500">ID ของ Rich Menu ที่ได้จาก LINE Developer Console</p>
+            <div class="mb-6">
+                <label for="productName" class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-tag mr-2"></i>ชื่อผลิตภัณฑ์ที่ซื้อ
+                </label>
+                <input type="text" id="productName"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother"
+                    placeholder="ระบุชื่อผลิตภัณฑ์">
             </div>
-            <div>
-              <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">วันหมดอายุ (ไม่จำเป็น)</label>
-              <input type="date" id="richmenuEndDate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-              <p class="mt-1 text-xs text-gray-500">หากไม่กำหนด ระบบจะใช้งานได้ตลอด</p>
+            <div class="mb-6">
+                <label for="phoneNumber" class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-phone mr-2"></i>เบอร์โทรศัพท์
+                </label>
+                <input type="tel" id="phoneNumber"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-pink-mother"
+                    placeholder="เบอร์โทรศัพท์สำหรับติดต่อ">
             </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button id="saveRichmenuBtn" type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-            <span id="saveRichmenuBtnText">บันทึก</span>
-            <span id="saveRichmenuBtnSpinner" class="hidden ml-2">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </span>
-          </button>
-          <button id="cancelRichmenuBtn" type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- โมดอลเพิ่ม/แก้ไขคำสั่งกำหนดเอง -->
-  <div id="customModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <h3 id="customModalTitle" class="text-lg font-medium text-gray-900 mb-4"></h3>
-          <form id="customForm" class="space-y-4">
-            <input type="hidden" id="customIdField">
-            <div>
-              <label for="keyword" class="block text-sm font-medium text-gray-700 mb-1">คีย์เวิร์ด</label>
-              <input type="text" id="customKeyword" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-              <p class="mt-1 text-xs text-gray-500">คำที่ใช้ในการเรียกคำสั่งกำหนดเองนี้ (ต้องไม่ซ้ำ)</p>
-            </div>
-            <div>
-              <label for="json" class="block text-sm font-medium text-gray-700 mb-1">คำสั่ง JSON</label>
-              <textarea id="customJson" required rows="6"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                placeholder='{"type": "text", "text": "สวัสดีค่ะ!"}'></textarea>
-              <p class="mt-1 text-xs text-gray-500">รูปแบบ JSON สำหรับการตอบกลับของ LINE Bot</p>
-              <div class="mt-2">
-                <p class="text-sm font-medium text-gray-700 mb-1">ตัวอย่าง JSON:</p>
-                <div class="json-preview">
-{
-  "type": "text",
-  "text": "สวัสดีค่ะ! ยินดีต้อนรับ"
-}</div>
-                <div class="json-preview mt-2">
-[
-  {
-    "type": "text",
-    "text": "สวัสดีค่ะ!"
-  },
-  {
-    "type": "sticker",
-    "packageId": "446",
-    "stickerId": "1988"
-  }
-]</div>
-              </div>
-            </div>
-            <div>
-              <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">วันหมดอายุ (ไม่จำเป็น)</label>
-              <input type="date" id="customEndDate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-              <p class="mt-1 text-xs text-gray-500">หากไม่กำหนด ระบบจะใช้งานได้ตลอด</p>
-            </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button id="saveCustomBtn" type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-            <span id="saveCustomBtnText">บันทึก</span>
-            <span id="saveCustomBtnSpinner" class="hidden ml-2">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </span>
-          </button>
-          <button id="cancelCustomBtn" type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- โมดอลเพิ่ม/แก้ไขคูปอง -->
-  <div id="couponModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <h3 id="couponModalTitle" class="text-lg font-medium text-gray-900 mb-4"></h3>
-          <form id="couponForm" class="space-y-4">
-            <input type="hidden" id="couponIdField">
-            <input type="hidden" id="couponOldKeyword">
-            <div>
-              <label for="keyword" class="block text-sm font-medium text-gray-700 mb-1">คีย์เวิร์ด</label>
-              <input type="text" id="couponKeyword" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500">
-              <p class="mt-1 text-xs text-gray-500">คำที่ใช้ในการเรียกคูปองนี้ (ต้องไม่ซ้ำ)</p>
-            </div>
-            <div>
-              <label for="title" class="block text-sm font-medium text-gray-700 mb-1">ชื่อคูปอง</label>
-              <input type="text" id="couponTitle" required disabled
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled">
-            </div>
-            <div>
-              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">รายละเอียดคูปอง</label>
-              <textarea id="couponDescription" required rows="3" disabled
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled"></textarea>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทส่วนลด</label>
-                <select id="couponRewardType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled" disabled>
-                  <option value="discount">ส่วนลด</option>
-                  <option value="free">ของแถม</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทราคา</label>
-                <select id="couponPriceType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled" disabled>
-                  <option value="fixed">จำนวนเงินคงที่</option>
-                  <option value="percentage">เปอร์เซ็นต์</option>
-                </select>
-              </div>
-              <div>
-                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">จำนวนเงิน/เปอร์เซ็นต์</label>
-                <input type="number" id="couponAmount" required min="1" disabled
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled">
-              </div>
-              <div>
-                <label for="maxUseCount" class="block text-sm font-medium text-gray-700 mb-1">จำนวนครั้งที่ใช้ได้สูงสุดต่อตั๋ว</label>
-                <input type="number" id="couponMaxUseCount" required min="1" value="1" disabled
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled">
-              </div>
-            </div>
-            <div>
-              <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-1">URL รูปภาพคูปอง</label>
-              <input type="url" id="couponImageUrl" required disabled
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled"
-                placeholder="https://example.com/coupon-image.jpg">
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">วันเริ่มต้น</label>
-                <input type="date" id="couponStartDate" required disabled
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled">
-              </div>
-              <div>
-                <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">วันหมดอายุ</label>
-                <input type="date" id="couponEndDate" required disabled
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled">
-              </div>
-            </div>
-            <div>
-              <label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">เขตเวลา</label>
-              <select id="couponTimezone" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 field-disabled" disabled>
-                <option value="ASIA_BANGKOK">กรุงเทพฯ (UTC+7)</option>
-                <option value="ASIA_TOKYO">โตเกียว (UTC+9)</option>
-                <option value="UTC">UTC</option>
-              </select>
-            </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button id="saveCouponBtn" type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:ml-3 sm:w-auto sm:text-sm">
-            <span id="saveCouponBtnText">บันทึก</span>
-            <span id="saveCouponBtnSpinner" class="hidden ml-2">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </span>
-          </button>
-          <button id="cancelCouponBtn" type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- โมดอลจัดการคีย์เวิร์ดของผู้ใช้ -->
-  <div id="userKeywordModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <h3 id="userKeywordModalTitle" class="text-lg font-medium text-gray-900 mb-4"></h3>
-          <form id="userKeywordForm" class="space-y-4">
-            <input type="hidden" id="userIdField">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">คีย์เวิร์ดที่อนุญาต</label>
-              <div id="keywordCheckboxes" class="checkbox-container">
-                <!-- Checkboxes จะถูกโหลดที่นี่ -->
-              </div>
-              <p class="mt-1 text-xs text-gray-500">เลือกคีย์เวิร์ดที่ผู้ใช้คนนี้สามารถใช้งานได้</p>
-            </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button id="saveUserKeywordBtn" type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-            <span id="saveUserKeywordBtnText">บันทึก</span>
-            <span id="saveUserKeywordBtnSpinner" class="hidden ml-2">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </span>
-          </button>
-          <button id="cancelUserKeywordBtn" type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // การกำหนดค่า Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCBU7FrCrQFVGG43Qnkd9OD924TF41JdfE",
-      authDomain: "linebot-d3aa4.firebaseapp.com",
-      databaseURL: "https://linebot-d3aa4-default-rtdb.firebaseio.com",
-      projectId: "linebot-d3aa4",
-      storageBucket: "linebot-d3aa4.appspot.com",
-      messagingSenderId: "341650685473",
-      appId: "1:341650685473:web:e0e24b890fa128fa27ed60",
-      measurementId: "G-QNKDF1YZSV"
-    };
-
-    // เริ่มต้น Firebase
-    let database;
-    let accessToken = '';
-    let currentTab = 'richmenu';
-    let richmenuData = [];
-    let customData = [];
-    let couponData = [];
-    let userData = [];
-    let allKeywords = [];
-    
-    // ตัวติดตามการเปลี่ยนแปลงแบบเรียลไทม์
-    let richmenuListener = null;
-    let customListener = null;
-    let couponListener = null;
-    let userListener = null;
-
-    // ตัวแปรป้องกันการบันทึกคูปองซ้ำซ้อน
-    let isSavingCoupon = false;
-
-    // เริ่มต้นแอปพลิเคชัน
-    function initializeApp() {
-      try {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        
-        updateFirebaseStatus(true);
-        loadAccessTokenFromFirebase();
-        setupEventListeners();
-        setupRealtimeListeners();
-        
-        setTimeout(() => {
-          document.getElementById('loadingScreen').classList.add('hidden');
-        }, 500);
-      } catch (error) {
-        console.error('ข้อผิดพลาดในการเริ่มต้น Firebase:', error);
-        updateFirebaseStatus(false);
-        showError('ไม่สามารถเชื่อมต่อกับ Firebase ได้');
-      }
-    }
-
-    // ตั้งค่าตัวติดตามการเปลี่ยนแปลงแบบเรียลไทม์
-    function setupRealtimeListeners() {
-      // ลบตัวติดตามเดิมถ้ามี
-      if (richmenuListener) richmenuListener.off();
-      if (customListener) customListener.off();
-      if (couponListener) couponListener.off();
-      if (userListener) userListener.off();
-      
-      // ตั้งค่าตัวติดตามใหม่
-      richmenuListener = database.ref('richmenu').on('value', (snapshot) => {
-        const data = snapshot.val();
-        richmenuData = data ? Object.keys(data)
-          .filter(key => key !== '_initialized')
-          .map(key => ({
-            id: key,
-            ...data[key]
-          })) : [];
-        
-        updateAllKeywords();
-        renderRichmenuTable();
-        document.getElementById('richmenuCount').textContent = richmenuData.length;
-        
-        if (richmenuData.length === 0) {
-          document.getElementById('richmenuEmpty').classList.remove('hidden');
-          document.querySelector('#richmenuTable').parentElement.classList.add('hidden');
-        } else {
-          document.getElementById('richmenuEmpty').classList.add('hidden');
-          document.querySelector('#richmenuTable').parentElement.classList.remove('hidden');
-        }
-      });
-      
-      customListener = database.ref('custom').on('value', (snapshot) => {
-        const data = snapshot.val();
-        customData = data ? Object.keys(data)
-          .filter(key => key !== '_initialized')
-          .map(key => ({
-            id: key,
-            ...data[key]
-          })) : [];
-        
-        updateAllKeywords();
-        renderCustomTable();
-        document.getElementById('customCount').textContent = customData.length;
-        
-        if (customData.length === 0) {
-          document.getElementById('customEmpty').classList.remove('hidden');
-          document.querySelector('#customTable').parentElement.classList.add('hidden');
-        } else {
-          document.getElementById('customEmpty').classList.add('hidden');
-          document.querySelector('#customTable').parentElement.classList.remove('hidden');
-        }
-      });
-      
-      couponListener = database.ref('coupons').on('value', (snapshot) => {
-        const data = snapshot.val();
-        couponData = data ? Object.keys(data)
-          .filter(key => key !== '_initialized')
-          .map(key => ({
-            id: key,
-            ...data[key]
-          })) : [];
-        
-        updateAllKeywords();
-        renderCouponTable();
-        document.getElementById('couponCount').textContent = couponData.length;
-        
-        if (couponData.length === 0) {
-          document.getElementById('couponEmpty').classList.remove('hidden');
-          document.querySelector('#couponTable').parentElement.classList.add('hidden');
-        } else {
-          document.getElementById('couponEmpty').classList.add('hidden');
-          document.querySelector('#couponTable').parentElement.classList.remove('hidden');
-        }
-      });
-      
-      userListener = database.ref('userData').on('value', (snapshot) => {
-        const data = snapshot.val();
-        userData = data ? Object.keys(data)
-          .filter(key => key !== '_initialized')
-          .map(key => ({
-            id: key,
-            ...data[key]
-          })) : [];
-        
-        renderUserTable();
-        document.getElementById('userCount').textContent = userData.length;
-        
-        if (userData.length === 0) {
-          document.getElementById('userEmpty').classList.remove('hidden');
-          document.querySelector('#userTable').parentElement.classList.add('hidden');
-        } else {
-          document.getElementById('userEmpty').classList.add('hidden');
-          document.querySelector('#userTable').parentElement.classList.remove('hidden');
-        }
-      });
-    }
-
-    // อัปเดตสถานะการเชื่อมต่อ Firebase
-    function updateFirebaseStatus(connected) {
-      const statusEl = document.getElementById('firebaseStatus');
-      if (connected) {
-        statusEl.className = 'firebase-status firebase-connected';
-        statusEl.innerHTML = '<i class="fas fa-database"></i><span>เชื่อมต่อ Firebase สำเร็จ</span>';
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-        }, 3000);
-      } else {
-        statusEl.className = 'firebase-status firebase-disconnected';
-        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>เชื่อมต่อ Firebase ไม่สำเร็จ</span>';
-      }
-    }
-
-    // โหลด Access Token จาก Firebase
-    function loadAccessTokenFromFirebase() {
-      database.ref('config/accessToken').once('value')
-        .then((snapshot) => {
-          const token = snapshot.val();
-          if (token) {
-            accessToken = token;
-            loadBotProfile();
-          } else {
-            showBotProfileError('ไม่พบ Access Token ในระบบ');
-          }
-        })
-        .catch((error) => {
-          console.error('ข้อผิดพลาดในการโหลด Access Token จาก Firebase:', error);
-          showBotProfileError('ไม่สามารถโหลด Access Token ได้');
-        });
-    }
-
-    // โหลดโปรไฟล์บอทจาก Backend
-    function loadBotProfile() {
-      if (!accessToken) {
-        showBotProfileError();
-        return;
-      }
-
-      document.getElementById('botName').textContent = 'กำลังโหลดข้อมูล...';
-      document.getElementById('botStatus').textContent = 'กำลังเชื่อมต่อ LINE API';
-      document.getElementById('botAvatar').innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
-
-      google.script.run
-        .withSuccessHandler(handleBotProfileSuccess)
-        .withFailureHandler(handleBotProfileError)
-        .getBotProfileInfo();
-    }
-
-    function handleBotProfileSuccess(data) {
-      if (data && data.displayName) {
-        document.getElementById('botName').textContent = data.displayName;
-        document.getElementById('botStatus').textContent = data.statusMessage || 'ใช้งานได้ปกติ';
-        
-        const avatar = document.getElementById('botAvatar');
-        if (data.pictureUrl) {
-          avatar.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = data.pictureUrl;
-          img.alt = 'Bot Avatar';
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.borderRadius = '50%';
-          img.style.objectFit = 'cover';
-          avatar.appendChild(img);
-          
-          img.onerror = function() {
-            avatar.innerHTML = '<i class="fas fa-robot"></i>';
-            avatar.style.backgroundImage = 'none';
-          };
-        } else {
-          avatar.innerHTML = '<i class="fas fa-robot"></i>';
-          avatar.style.backgroundImage = 'none';
-        }
-        
-        document.querySelectorAll('.profile-loading').forEach(el => {
-          el.classList.remove('profile-loading');
-          el.style.width = '';
-          el.style.height = '';
-          el.style.borderRadius = '';
-        });
-      } else {
-        showBotProfileError('ไม่พบข้อมูลโปรไฟล์บอท');
-      }
-    }
-
-    function handleBotProfileError(error) {
-      console.error('ข้อผิดพลาดในการโหลดโปรไฟล์บอท:', error);
-      showBotProfileError('ไม่สามารถโหลดข้อมูลบอท: ' + (error.message || 'ตรวจสอบ Access Token'));
-    }
-
-    function showBotProfileError(message = 'ไม่สามารถโหลดข้อมูลบอท') {
-      const avatar = document.getElementById('botAvatar');
-      avatar.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-      avatar.style.backgroundImage = 'none';
-      
-      document.getElementById('botName').textContent = 'บอท (ไม่สามารถโหลดข้อมูล)';
-      document.getElementById('botStatus').textContent = message;
-      
-      document.querySelectorAll('.profile-loading').forEach(el => {
-        el.classList.remove('profile-loading');
-        el.style.width = '';
-        el.style.height = '';
-        el.style.borderRadius = '';
-      });
-    }
-
-    // ตั้งค่าตัวจัดการเหตุการณ์
-    function setupEventListeners() {
-      document.getElementById('richmenuTab').addEventListener('click', () => switchTab('richmenu'));
-      document.getElementById('customTab').addEventListener('click', () => switchTab('custom'));
-      document.getElementById('couponTab').addEventListener('click', () => switchTab('coupon'));
-      document.getElementById('userTab').addEventListener('click', () => switchTab('user'));
-      
-      document.getElementById('refreshBtn').addEventListener('click', loadAllData);
-      document.getElementById('configBtn').addEventListener('click', showConfigModal);
-      document.getElementById('addRichmenuBtn').addEventListener('click', showAddRichmenuModal);
-      document.getElementById('addCustomBtn').addEventListener('click', showAddCustomModal);
-      document.getElementById('addCouponBtn').addEventListener('click', showAddCouponModal);
-      
-      document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
-      document.getElementById('cancelConfigBtn').addEventListener('click', hideConfigModal);
-      
-      document.getElementById('saveRichmenuBtn').addEventListener('click', saveRichmenuData);
-      document.getElementById('cancelRichmenuBtn').addEventListener('click', hideRichmenuModal);
-      
-      document.getElementById('saveCustomBtn').addEventListener('click', saveCustomData);
-      document.getElementById('cancelCustomBtn').addEventListener('click', hideCustomModal);
-      
-      document.getElementById('saveCouponBtn').addEventListener('click', saveCouponData);
-      document.getElementById('cancelCouponBtn').addEventListener('click', hideCouponModal);
-      
-      document.getElementById('saveUserKeywordBtn').addEventListener('click', saveUserKeywordData);
-      document.getElementById('cancelUserKeywordBtn').addEventListener('click', hideUserKeywordModal);
-    }
-
-    // การเปลี่ยนแท็บ
-    function switchTab(tabName) {
-      currentTab = tabName;
-      
-      document.querySelectorAll('.tab-button').forEach(tab => {
-        tab.classList.remove('tab-active');
-      });
-      
-      document.getElementById('richmenuContent').classList.add('hidden');
-      document.getElementById('customContent').classList.add('hidden');
-      document.getElementById('couponContent').classList.add('hidden');
-      document.getElementById('userContent').classList.add('hidden');
-      
-      if (tabName === 'richmenu') {
-        document.getElementById('richmenuTab').classList.add('tab-active');
-        document.getElementById('richmenuContent').classList.remove('hidden');
-      } else if (tabName === 'custom') {
-        document.getElementById('customTab').classList.add('tab-active');
-        document.getElementById('customContent').classList.remove('hidden');
-      } else if (tabName === 'coupon') {
-        document.getElementById('couponTab').classList.add('tab-active');
-        document.getElementById('couponContent').classList.remove('hidden');
-      } else if (tabName === 'user') {
-        document.getElementById('userTab').classList.add('tab-active');
-        document.getElementById('userContent').classList.remove('hidden');
-      }
-    }
-
-    // โหลดข้อมูลทั้งหมดจาก Firebase
-    function loadAllData() {
-      showLoading();
-      
-      // ตัวติดตามจะจัดการการอัปเดตโดยอัตโนมัติ
-      setTimeout(() => {
-        hideLoading();
-      }, 1000);
-    }
-
-    // อัปเดตรายการคีย์เวิร์ดทั้งหมด
-    function updateAllKeywords() {
-      allKeywords = [
-        ...richmenuData.map(item => ({ keyword: item.keyword, type: 'richmenu' })),
-        ...customData.map(item => ({ keyword: item.keyword, type: 'custom' })),
-        ...couponData.map(item => ({ keyword: item.keyword, type: 'coupon' }))
-      ];
-    }
-
-    // ตรวจสอบว่าองค์กรหมดอายุหรือไม่
-    function isExpired(endDate) {
-      if (!endDate) return false;
-      return new Date(endDate) <= new Date();
-    }
-
-    // รับ HTML ของป้ายสถานะ
-    function getStatusBadge(endDate) {
-      if (isExpired(endDate)) {
-        return '<span class="status-badge status-expired"><i class="fas fa-times-circle mr-1"></i>หมดอายุ</span>';
-      } else {
-        return '<span class="status-badge status-active"><i class="fas fa-check-circle mr-1"></i>ใช้งานได้</span>';
-      }
-    }
-
-    // รับ HTML ของป้ายสถานะคูปอง
-    function getCouponStatusBadge(endDate) {
-      if (isExpired(endDate)) {
-        return '<span class="coupon-badge"><i class="fas fa-times-circle mr-1"></i>หมดอายุ</span>';
-      } else {
-        return '<span class="coupon-badge"><i class="fas fa-check-circle mr-1"></i>ใช้งานได้</span>';
-      }
-    }
-
-    // รับ HTML ของป้ายสถานะผู้ใช้
-    function getUserStatusBadge(status) {
-      if (status === 'blocked') {
-        return '<span class="status-badge status-blocked"><i class="fas fa-ban mr-1"></i>ถูกบล็อก</span>';
-      } else {
-        return '<span class="status-badge status-active"><i class="fas fa-check-circle mr-1"></i>ใช้งานได้</span>';
-      }
-    }
-
-    // แสดงตาราง Richmenu
-    function renderRichmenuTable() {
-      const tableBody = document.getElementById('richmenuTable');
-      tableBody.innerHTML = '';
-      
-      richmenuData.forEach(item => {
-        const row = document.createElement('tr');
-        row.className = 'table-row smooth-transition';
-        
-        let endDateText = '<span class="text-gray-400">ไม่มีวันหมดอายุ</span>';
-        if (item.endDate) {
-          const date = new Date(item.endDate);
-          endDateText = date.toLocaleDateString('th-TH');
-        }
-        
-        row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            ${item.keyword || 'ไม่ระบุ'}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            <span class="font-mono bg-gray-100 px-2 py-1 rounded text-xs">${item.richmenuId || 'ไม่ระบุ'}</span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${getStatusBadge(item.endDate)}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${endDateText}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <button class="edit-richmenu-btn text-indigo-600 hover:text-indigo-900 mr-3" data-id="${item.id}">
-              <i class="fas fa-edit mr-1"></i> แก้ไข
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-pink-mother to-red-400 text-white font-bold py-3 px-4 rounded-lg hover:from-pink-600 hover:to-red-500 transition duration-300">
+                <i class="fas fa-paper-plane mr-2"></i>ส่งข้อมูล
             </button>
-            <button class="delete-richmenu-btn text-red-600 hover:text-red-900" data-id="${item.id}">
-              <i class="fas fa-trash-alt mr-1"></i> ลบ
+        </form>
+        <div id="shareSection" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4 text-center">
+                <i class="fas fa-share-alt mr-2"></i>แชร์ความรักให้แม่
+            </h3>
+
+            <div class="space-y-4">
+                <button id="shareLineBtn"
+                    class="w-full bg-line-green text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition duration-300">
+                    <i class="fab fa-line mr-2"></i>แชร์ใน LINE
+                </button>
+                <button id="shareFacebookBtn"
+                    class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                    <i class="fab fa-facebook-f mr-2"></i>แชร์ใน Facebook
+                </button>
+            </div>
+        </div>
+        <div id="adminPanel" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">
+                <i class="fas fa-cog mr-2"></i>ตรวจสอบข้อมูล
+            </h3>
+            <button id="viewDataBtn"
+                class="w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-300">
+                <i class="fas fa-table mr-2"></i>ดูข้อมูลทั้งหมด
             </button>
-          </td>
-        `;
-        
-        tableBody.appendChild(row);
-      });
-      
-      document.querySelectorAll('.edit-richmenu-btn').forEach(btn => {
-        btn.addEventListener('click', () => showEditRichmenuModal(btn.dataset.id));
-      });
-      
-      document.querySelectorAll('.delete-richmenu-btn').forEach(btn => {
-        btn.addEventListener('click', () => confirmDeleteRichmenu(btn.dataset.id));
-      });
-    }
+        </div>
+    </div>
+    <script>
+        // Global variables
+        let liffProfile = null;
+        let selectedImage = null;
+        let submissionData = null;
 
-    // แสดงตารางคำสั่งกำหนดเอง
-    function renderCustomTable() {
-      const tableBody = document.getElementById('customTable');
-      tableBody.innerHTML = '';
-      
-      customData.forEach(item => {
-        const row = document.createElement('tr');
-        row.className = 'table-row smooth-transition';
-        
-        const truncatedJson = item.json && item.json.length > 80 ? 
-          item.json.substring(0, 80) + '...' : (item.json || 'ไม่ระบุ');
-        
-        let endDateText = '<span class="text-gray-400">ไม่มีวันหมดอายุ</span>';
-        if (item.endDate) {
-          const date = new Date(item.endDate);
-          endDateText = date.toLocaleDateString('th-TH');
-        }
-        
-        row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            ${item.keyword || 'ไม่ระบุ'}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500">
-            <div class="json-preview">${truncatedJson}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${getStatusBadge(item.endDate)}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${endDateText}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <button class="edit-custom-btn text-green-600 hover:text-green-900 mr-3" data-id="${item.id}">
-              <i class="fas fa-edit mr-1"></i> แก้ไข
-            </button>
-            <button class="delete-custom-btn text-red-600 hover:text-red-900" data-id="${item.id}">
-              <i class="fas fa-trash-alt mr-1"></i> ลบ
-            </button>
-          </td>
-        `;
-        
-        tableBody.appendChild(row);
-      });
-      
-      document.querySelectorAll('.edit-custom-btn').forEach(btn => {
-        btn.addEventListener('click', () => showEditCustomModal(btn.dataset.id));
-      });
-      
-      document.querySelectorAll('.delete-custom-btn').forEach(btn => {
-        btn.addEventListener('click', () => confirmDeleteCustom(btn.dataset.id));
-      });
-    }
+        // LIFF Configuration
+        const LIFF_ID = '1657132355-ZdM6EdWK';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuAgmG-CK6_pd0Syh6Le67pQXX8z39FABhP2P1lZzSqtFvEVoijTOnDQ0y_VF2q0TznQ/exec';
+        const HASHTAGS = '#วันแม่2025 #แสดงความรักแม่ #รักแม่ #MothersDay2025';
 
-    // แสดงตารางคูปอง
-    function renderCouponTable() {
-      const tableBody = document.getElementById('couponTable');
-      tableBody.innerHTML = '';
-      
-      couponData.forEach(item => {
-        const row = document.createElement('tr');
-        row.className = 'table-row smooth-transition';
-        
-        let endDateText = '<span class="text-gray-400">ไม่มีวันหมดอายุ</span>';
-        if (item.endDate) {
-          const date = new Date(item.endDate);
-          endDateText = date.toLocaleDateString('th-TH');
-        }
-        
-        // จัดรูปแบบข้อมูลส่วนลด
-        let discountInfo = '';
-        if (item.reward && item.reward.priceInfo) {
-          if (item.reward.priceInfo.type === 'fixed') {
-            discountInfo = `ลด ${item.reward.priceInfo.fixedAmount} บาท`;
-          } else if (item.reward.priceInfo.type === 'percentage') {
-            discountInfo = `ลด ${item.reward.priceInfo.percentage}%`;
-          }
-        }
-        
-        row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            ${item.keyword || 'ไม่ระบุ'}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            ${item.title || 'ไม่ระบุ'}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500">
-            <div class="json-preview">${item.description || 'ไม่มีรายละเอียด'}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${discountInfo}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${getCouponStatusBadge(item.endDate)}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${endDateText}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <button class="edit-coupon-btn text-pink-600 hover:text-pink-900 mr-3" data-id="${item.id}">
-              <i class="fas fa-edit mr-1"></i> แก้ไข
-            </button>
-            <button class="delete-coupon-btn text-red-600 hover:text-red-900" data-id="${item.id}">
-              <i class="fas fa-trash-alt mr-1"></i> ลบ
-            </button>
-          </td>
-        `;
-        
-        tableBody.appendChild(row);
-      });
-      
-      document.querySelectorAll('.edit-coupon-btn').forEach(btn => {
-        btn.addEventListener('click', () => showEditCouponModal(btn.dataset.id));
-      });
-      
-      document.querySelectorAll('.delete-coupon-btn').forEach(btn => {
-        btn.addEventListener('click', () => confirmDeleteCoupon(btn.dataset.id));
-      });
-    }
+        // Initialize LIFF
+        window.onload = function() {
+            initializeLiff();
+            setupEventListeners();
+        };
 
-    // แสดงตารางข้อมูลผู้ใช้
-    function renderUserTable() {
-      const tableBody = document.getElementById('userTable');
-      tableBody.innerHTML = '';
-      
-      userData.forEach(item => {
-        const row = document.createElement('tr');
-        row.className = 'table-row smooth-transition';
-        
-        const firstJoinedAt = item.firstJoinedAt ? 
-          new Date(item.firstJoinedAt).toLocaleDateString('th-TH') : 'ไม่ระบุ';
-        const lastActiveAt = item.lastActiveAt ? 
-          new Date(item.lastActiveAt).toLocaleDateString('th-TH') : 'ไม่ระบุ';
-        
-        const allowedKeywords = item.allowedKeywords ? 
-          Object.keys(item.allowedKeywords).join(', ') : 'ไม่มี';
-        
-        const avatarHtml = item.pictureUrl ? 
-          `<img src="${item.pictureUrl}" alt="${item.displayName || 'ผู้ใช้'}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-user\\'></i>'">` :
-          '<i class="fas fa-user"></i>';
-        
-        row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            <div class="user-avatar">${avatarHtml}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            ${item.displayName || 'ไม่ระบุชื่อ'}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${getUserStatusBadge(item.status)}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${firstJoinedAt}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${lastActiveAt}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500">
-            ${allowedKeywords}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <button class="edit-user-keywords-btn text-indigo-600 hover:text-indigo-900 mr-3" data-id="${item.id}">
-              <i class="fas fa-key mr-1"></i> จัดการคีย์เวิร์ด
-            </button>
-            <button class="delete-user-btn text-red-600 hover:text-red-900" data-id="${item.id}">
-              <i class="fas fa-trash-alt mr-1"></i> ลบ
-            </button>
-          </td>
-        `;
-        
-        tableBody.appendChild(row);
-      });
-      
-      document.querySelectorAll('.edit-user-keywords-btn').forEach(btn => {
-        btn.addEventListener('click', () => showUserKeywordModal(btn.dataset.id));
-      });
-      
-      document.querySelectorAll('.delete-user-btn').forEach(btn => {
-        btn.addEventListener('click', () => confirmDeleteUser(btn.dataset.id));
-      });
-    }
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
 
-    // ฟังก์ชันโมดอลตั้งค่า
-    function showConfigModal() {
-      document.getElementById('accessToken').value = accessToken;
-      document.getElementById('configModal').classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function hideConfigModal() {
-      document.getElementById('configModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-    }
-
-    function saveConfig() {
-      const token = document.getElementById('accessToken').value.trim();
-      if (!token) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'กรุณากรอก Access Token',
-          text: 'Access Token จำเป็นสำหรับการทำงานของระบบ',
-          confirmButtonColor: '#4f46e5',
-        });
-        return;
-      }
-
-      database.ref('config/accessToken').set(token)
-        .then(() => {
-          accessToken = token;
-          Swal.fire({
-            icon: 'success',
-            title: 'บันทึกการตั้งค่าสำเร็จ!',
-            text: 'ระบบพร้อมใช้งานแล้ว',
-            confirmButtonColor: '#4f46e5',
-            timer: 1500,
-            timerProgressBar: true
-          });
-          hideConfigModal();
-          loadBotProfile();
-        })
-        .catch((error) => {
-          showError('เกิดข้อผิดพลาดในการบันทึกการตั้งค่า: ' + error.message);
-        });
-    }
-
-    // ฟังก์ชันโมดอล Richmenu
-    function showAddRichmenuModal() {
-      document.getElementById('richmenuModalTitle').textContent = 'เพิ่ม Rich Menu ใหม่';
-      document.getElementById('richmenuIdField').value = '';
-      document.getElementById('richmenuKeyword').value = '';
-      document.getElementById('richmenuRichmenuId').value = '';
-      document.getElementById('richmenuEndDate').value = '';
-      showRichmenuModal();
-    }
-
-    function showEditRichmenuModal(id) {
-      const item = richmenuData.find(item => item.id === id);
-      if (!item) return;
-      
-      document.getElementById('richmenuModalTitle').textContent = 'แก้ไข Rich Menu';
-      document.getElementById('richmenuIdField').value = item.id;
-      document.getElementById('richmenuKeyword').value = item.keyword || '';
-      document.getElementById('richmenuRichmenuId').value = item.richmenuId || '';
-      
-      if (item.endDate) {
-        const date = new Date(item.endDate);
-        const formattedDate = date.toISOString().split('T')[0];
-        document.getElementById('richmenuEndDate').value = formattedDate;
-      } else {
-        document.getElementById('richmenuEndDate').value = '';
-      }
-      
-      showRichmenuModal();
-    }
-
-    function showRichmenuModal() {
-      document.getElementById('richmenuModal').classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function hideRichmenuModal() {
-      document.getElementById('richmenuModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('saveRichmenuBtnText').classList.remove('hidden');
-      document.getElementById('saveRichmenuBtnSpinner').classList.add('hidden');
-      document.getElementById('saveRichmenuBtn').disabled = false;
-    }
-
-    function saveRichmenuData() {
-      const id = document.getElementById('richmenuIdField').value;
-      const keyword = document.getElementById('richmenuKeyword').value.trim();
-      const richmenuId = document.getElementById('richmenuRichmenuId').value.trim();
-      const endDate = document.getElementById('richmenuEndDate').value;
-      
-      if (!keyword || !richmenuId) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'กรุณากรอกข้อมูลให้ครบ',
-          text: 'จำเป็นต้องกรอกคีย์เวิร์ดและ Richmenu ID',
-          confirmButtonColor: '#4f46e5',
-        });
-        return;
-      }
-      
-      if (!richmenuId.startsWith('richmenu-') || richmenuId.length < 30) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Richmenu ID ไม่ถูกต้อง',
-          text: 'Richmenu ID ควรขึ้นต้นด้วย "richmenu-" และมีความยาวอย่างน้อย 30 ตัวอักษร',
-          confirmButtonColor: '#4f46e5',
-        });
-        return;
-      }
-
-      const duplicateKeyword = richmenuData.find(item => 
-        item.keyword && item.keyword.toLowerCase() === keyword.toLowerCase() && item.id !== id
-      );
-      
-      if (duplicateKeyword) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'คีย์เวิร์ดซ้ำ',
-          text: 'คีย์เวิร์ดนี้มีอยู่ในระบบแล้ว กรุณาใช้คีย์เวิร์ดอื่น',
-          confirmButtonColor: '#4f46e5',
-        });
-        return;
-      }
-      
-      const data = {
-        keyword,
-        richmenuId,
-        endDate: endDate || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      document.getElementById('saveRichmenuBtnText').classList.add('hidden');
-      document.getElementById('saveRichmenuBtnSpinner').classList.remove('hidden');
-      document.getElementById('saveRichmenuBtn').disabled = true;
-      
-      const operation = id ? 
-        database.ref('richmenu/' + id).update(data) : 
-        database.ref('richmenu').push(data);
-      
-      operation
-        .then(() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'สำเร็จ!',
-            text: id ? 'อัปเดตข้อมูลสำเร็จ' : 'เพิ่มข้อมูลสำเร็จ',
-            confirmButtonColor: '#4f46e5',
-            timer: 1500,
-            timerProgressBar: true
-          });
-          hideRichmenuModal();
-          loadAllData();
-        })
-        .catch((error) => {
-          showError('เกิดข้อผิดพลาด: ' + error.message);
-          document.getElementById('saveRichmenuBtnText').classList.remove('hidden');
-          document.getElementById('saveRichmenuBtnSpinner').classList.add('hidden');
-          document.getElementById('saveRichmenuBtn').disabled = false;
-        });
-    }
-
-    function confirmDeleteRichmenu(id) {
-      const item = richmenuData.find(item => item.id === id);
-      if (!item) return;
-      
-      Swal.fire({
-        title: 'ยืนยันการลบ Rich Menu?',
-        html: `คุณแน่ใจที่จะลบ <b>${item.keyword || 'รายการนี้'}</b> หรือไม่?<br>การกระทำนี้ไม่สามารถยกเลิกได้`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          database.ref('richmenu/' + id).remove()
-            .then(() => {
-              Swal.fire({
-                icon: 'success',
-                title: 'ลบสำเร็จ!',
-                text: 'ข้อมูลถูกลบแล้ว',
-                confirmButtonColor: '#4f46e5',
-                timer: 1500,
-                timerProgressBar: true
-              });
-              loadAllData();
-            })
-            .catch((error) => {
-              showError('เกิดข้อผิดพลาดในการลบ: ' + error.message);
-            });
-        }
-      });
-    }
-
-    // ฟังก์ชันโมดอลคำสั่งกำหนดเอง
-    function showAddCustomModal() {
-      document.getElementById('customModalTitle').textContent = 'เพิ่มคำสั่งกำหนดเองใหม่';
-      document.getElementById('customIdField').value = '';
-      document.getElementById('customKeyword').value = '';
-      document.getElementById('customJson').value = '';
-      document.getElementById('customEndDate').value = '';
-      showCustomModal();
-    }
-
-    function showEditCustomModal(id) {
-      const item = customData.find(item => item.id === id);
-      if (!item) return;
-      
-      document.getElementById('customModalTitle').textContent = 'แก้ไขคำสั่งกำหนดเอง';
-      document.getElementById('customIdField').value = item.id;
-      document.getElementById('customKeyword').value = item.keyword || '';
-      document.getElementById('customJson').value = item.json || '';
-      
-      if (item.endDate) {
-        const date = new Date(item.endDate);
-        const formattedDate = date.toISOString().split('T')[0];
-        document.getElementById('customEndDate').value = formattedDate;
-      } else {
-        document.getElementById('customEndDate').value = '';
-      }
-      
-      showCustomModal();
-    }
-
-    function showCustomModal() {
-      document.getElementById('customModal').classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function hideCustomModal() {
-      document.getElementById('customModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('saveCustomBtnText').classList.remove('hidden');
-      document.getElementById('saveCustomBtnSpinner').classList.add('hidden');
-      document.getElementById('saveCustomBtn').disabled = false;
-    }
-
-    function saveCustomData() {
-      const id = document.getElementById('customIdField').value;
-      const keyword = document.getElementById('customKeyword').value.trim();
-      const json = document.getElementById('customJson').value.trim();
-      const endDate = document.getElementById('customEndDate').value;
-      
-      if (!keyword || !json) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'กรุณากรอกข้อมูลให้ครบ',
-          text: 'จำเป็นต้องกรอกคีย์เวิร์ดและคำสั่ง JSON',
-          confirmButtonColor: '#10b981',
-        });
-        return;
-      }
-      
-      try {
-        JSON.parse(json);
-      } catch (e) {
-        Swal.fire({
-          icon: 'error',
-          title: 'รูปแบบ JSON ไม่ถูกต้อง',
-          text: 'กรุณาตรวจสอบ JSON ให้ถูกต้องก่อนบันทึก',
-          confirmButtonColor: '#10b981',
-        });
-        return;
-      }
-
-      const duplicateKeyword = customData.find(item => 
-        item.keyword && item.keyword.toLowerCase() === keyword.toLowerCase() && item.id !== id
-      );
-      
-      if (duplicateKeyword) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'คีย์เวิร์ดซ้ำ',
-          text: 'คีย์เวิร์ดนี้มีอยู่ในระบบแล้ว กรุณาใช้คีย์เวิร์ดอื่น',
-          confirmButtonColor: '#10b981',
-        });
-        return;
-      }
-      
-      const data = {
-        keyword,
-        json,
-        endDate: endDate || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      document.getElementById('saveCustomBtnText').classList.add('hidden');
-      document.getElementById('saveCustomBtnSpinner').classList.remove('hidden');
-      document.getElementById('saveCustomBtn').disabled = true;
-      
-      const operation = id ? 
-        database.ref('custom/' + id).update(data) : 
-        database.ref('custom').push(data);
-      
-      operation
-        .then(() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'สำเร็จ!',
-            text: id ? 'อัปเดตคำสั่งสำเร็จ' : 'เพิ่มคำสั่งสำเร็จ',
-            confirmButtonColor: '#10b981',
-            timer: 1500,
-            timerProgressBar: true
-          });
-          hideCustomModal();
-          loadAllData();
-        })
-        .catch((error) => {
-          showError('เกิดข้อผิดพลาด: ' + error.message);
-          document.getElementById('saveCustomBtnText').classList.remove('hidden');
-          document.getElementById('saveCustomBtnSpinner').classList.add('hidden');
-          document.getElementById('saveCustomBtn').disabled = false;
-        });
-    }
-
-    function confirmDeleteCustom(id) {
-      const item = customData.find(item => item.id === id);
-      if (!item) return;
-      
-      Swal.fire({
-        title: 'ยืนยันการลบคำสั่งกำหนดเอง?',
-        html: `คุณแน่ใจที่จะลบ <b>${item.keyword || 'รายการนี้'}</b> หรือไม่?<br>การกระทำนี้ไม่สามารถยกเลิกได้`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          database.ref('custom/' + id).remove()
-            .then(() => {
-              Swal.fire({
-                icon: 'success',
-                title: 'ลบสำเร็จ!',
-                text: 'คำสั่งถูกลบแล้ว',
-                confirmButtonColor: '#10b981',
-                timer: 1500,
-                timerProgressBar: true
-              });
-              loadAllData();
-            })
-            .catch((error) => {
-              showError('เกิดข้อผิดพลาดในการลบ: ' + error.message);
-            });
-        }
-      });
-    }
-
-    // ฟังก์ชันโมดอลคูปอง
-    function showAddCouponModal() {
-      document.getElementById('couponModalTitle').textContent = 'เพิ่มคูปองใหม่';
-      document.getElementById('couponIdField').value = '';
-      document.getElementById('couponOldKeyword').value = '';
-      document.getElementById('couponKeyword').value = '';
-      document.getElementById('couponTitle').value = '';
-      document.getElementById('couponDescription').value = '';
-      document.getElementById('couponRewardType').value = 'discount';
-      document.getElementById('couponPriceType').value = 'fixed';
-      document.getElementById('couponAmount').value = '';
-      document.getElementById('couponMaxUseCount').value = '1';
-      document.getElementById('couponImageUrl').value = '';
-      
-      // ตั้งค่าวันเริ่มต้น (วันนี้ถึง 30 วันข้างหน้า)
-      const today = new Date();
-      const nextMonth = new Date();
-      nextMonth.setDate(today.getDate() + 30);
-      
-      document.getElementById('couponStartDate').value = today.toISOString().split('T')[0];
-      document.getElementById('couponEndDate').value = nextMonth.toISOString().split('T')[0];
-      document.getElementById('couponTimezone').value = 'ASIA_BANGKOK';
-      
-      showCouponModal();
-    }
-
-    function showEditCouponModal(id) {
-      const item = couponData.find(item => item.id === id);
-      if (!item) return;
-      
-      document.getElementById('couponModalTitle').textContent = 'แก้ไขคูปอง';
-      document.getElementById('couponIdField').value = item.id;
-      document.getElementById('couponOldKeyword').value = item.keyword || '';
-      document.getElementById('couponKeyword').value = item.keyword || '';
-      document.getElementById('couponTitle').value = item.title || '';
-      document.getElementById('couponDescription').value = item.description || '';
-      
-      // ตั้งค่าข้อมูลส่วนลด
-      if (item.reward) {
-        document.getElementById('couponRewardType').value = item.reward.type || 'discount';
-        if (item.reward.priceInfo) {
-          document.getElementById('couponPriceType').value = item.reward.priceInfo.type || 'fixed';
-          if (item.reward.priceInfo.type === 'fixed') {
-            document.getElementById('couponAmount').value = item.reward.priceInfo.fixedAmount || '';
-          } else {
-            document.getElementById('couponAmount').value = item.reward.priceInfo.percentage || '';
-          }
-        }
-      }
-      
-      document.getElementById('couponMaxUseCount').value = item.maxUseCountPerTicket || '1';
-      document.getElementById('couponImageUrl').value = item.imageUrl || '';
-      
-      // ตั้งค่าวันที่
-      if (item.startTimestamp) {
-        const startDate = new Date(item.startTimestamp * 1000);
-        document.getElementById('couponStartDate').value = startDate.toISOString().split('T')[0];
-      }
-      
-      if (item.endTimestamp) {
-        const endDate = new Date(item.endTimestamp * 1000);
-        document.getElementById('couponEndDate').value = endDate.toISOString().split('T')[0];
-      }
-      
-      document.getElementById('couponTimezone').value = item.timezone || 'ASIA_BANGKOK';
-      
-      showCouponModal();
-    }
-
-    function showCouponModal() {
-      document.getElementById('couponModal').classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function hideCouponModal() {
-      document.getElementById('couponModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('saveCouponBtnText').classList.remove('hidden');
-      document.getElementById('saveCouponBtnSpinner').classList.add('hidden');
-      document.getElementById('saveCouponBtn').disabled = false;
-      isSavingCoupon = false;
-    }
-
-    function saveCouponData() {
-      // ป้องกันการคลิกหลายครั้ง
-      if (isSavingCoupon) return;
-      isSavingCoupon = true;
-      
-      const id = document.getElementById('couponIdField').value;
-      const keyword = document.getElementById('couponKeyword').value.trim();
-      
-      // ตรวจสอบฟิลด์ที่จำเป็น
-      if (!keyword) {
-        isSavingCoupon = false;
-        Swal.fire({
-          icon: 'warning',
-          title: 'กรุณากรอกคีย์เวิร์ด',
-          text: 'จำเป็นต้องกรอกคีย์เวิร์ด',
-          confirmButtonColor: '#d97706',
-        });
-        return;
-      }
-      
-      // ตรวจสอบคีย์เวิร์ดซ้ำ
-      const duplicateKeyword = couponData.find(item => 
-        item.keyword && item.keyword.toLowerCase() === keyword.toLowerCase() && item.id !== id
-      );
-      
-      if (duplicateKeyword) {
-        isSavingCoupon = false;
-        Swal.fire({
-          icon: 'warning',
-          title: 'คีย์เวิร์ดซ้ำ',
-          text: 'คีย์เวิร์ดนี้มีอยู่ในระบบแล้ว กรุณาใช้คีย์เวิร์ดอื่น',
-          confirmButtonColor: '#d97706',
-        });
-        return;
-      }
-      
-      // ปุ่มบันทึกและแสดงการโหลด
-      document.getElementById('saveCouponBtnText').classList.add('hidden');
-      document.getElementById('saveCouponBtnSpinner').classList.remove('hidden');
-      document.getElementById('saveCouponBtn').disabled = true;
-      document.getElementById('saveCouponBtn').classList.add('btn-disabled');
-      
-      let couponId = id;
-      let opPromise;
-      const oldKeyword = document.getElementById('couponOldKeyword').value;
-
-      if (id && oldKeyword) {
-        // ลบคูปองเก่าจาก LINE API ถ้ามี
-        google.script.run
-          .withSuccessHandler(() => {
-            // ดำเนินการบันทึกต่อไป
-            saveCouponToDatabase();
-          })
-          .withFailureHandler((error) => {
-            console.error('ข้อผิดพลาดในการลบคูปองเก่า:', error);
-            // ดำเนินการบันทึกต่อไปแม้ว่าจะลบไม่สำเร็จ
-            saveCouponToDatabase();
-          })
-          .deleteCoupon(oldKeyword);
-      } else {
-        saveCouponToDatabase();
-      }
-
-      function saveCouponToDatabase() {
-        if (id) {
-          opPromise = database.ref('coupons/' + id).update({ keyword });
-        } else {
-          const newRef = database.ref('coupons').push();
-          couponId = newRef.key;
-          opPromise = newRef.set({ keyword });
+                if (liff.isLoggedIn()) {
+                    await loadProfile();
+                } else {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('LIFF initialization failed:', error);
+                // Fallback for local testing without LIFF
+                document.getElementById('profileSection').classList.remove('hidden');
+                document.getElementById('displayName').textContent = 'ผู้ใช้ทดสอบ';
+                document.getElementById('userId').textContent = 'test-user-id';
+            }
         }
 
-        opPromise
-          .then(() => {
-            Swal.fire({
-              icon: 'success',
-              title: 'สำเร็จ!',
-              text: id ? 'อัปเดตคีย์เวิร์ดคูปองสำเร็จ' : 'เพิ่มคีย์เวิร์ดคูปองสำเร็จ',
-              confirmButtonColor: '#d97706',
-              timer: 1500,
-              timerProgressBar: true
-            });
-            hideCouponModal();
-            loadAllData();
-          })
-          .catch((error) => {
-            handleCouponApiError(error);
-          });
-      }
+        async function loadProfile() {
+            try {
+                const profile = await liff.getProfile();
+                liffProfile = profile;
 
-      function handleCouponApiError(error) {
-        console.error('ข้อผิดพลาด API คูปอง:', error);
-        isSavingCoupon = false;
-        showError('เกิดข้อผิดพลาดในการบันทึกคูปอง: ' + (error.message || error));
-        document.getElementById('saveCouponBtnText').classList.remove('hidden');
-        document.getElementById('saveCouponBtnSpinner').classList.add('hidden');
-        document.getElementById('saveCouponBtn').disabled = false;
-        document.getElementById('saveCouponBtn').classList.remove('btn-disabled');
-      }
-    }
+                document.getElementById('profilePicture').src = profile.pictureUrl || '';
+                document.getElementById('displayName').textContent = profile.displayName;
+                document.getElementById('userId').textContent = profile.userId;
+                document.getElementById('profileSection').classList.remove('hidden');
 
-    function confirmDeleteCoupon(id) {
-      const item = couponData.find(item => item.id === id);
-      if (!item) return;
-      
-      Swal.fire({
-        title: 'ยืนยันการลบคูปอง?',
-        html: `คุณแน่ใจที่จะลบ <b>${item.title || 'รายการนี้'}</b> หรือไม่?<br>การกระทำนี้ไม่สามารถยกเลิกได้`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d97706',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // ลบจาก LINE API ก่อน
-          google.script.run
-            .withSuccessHandler(() => {
-              // แล้วลบจาก Firebase
-              database.ref('coupons/' + id).remove()
-                .then(() => {
-                  Swal.fire({
-                    icon: 'success',
-                    title: 'ลบสำเร็จ!',
-                    text: 'คูปองถูกลบแล้ว',
-                    confirmButtonColor: '#d97706',
-                    timer: 1500,
-                    timerProgressBar: true
-                  });
-                  loadAllData();
-                })
-                .catch((error) => {
-                  showError('เกิดข้อผิดพลาดในการลบ: ' + error.message);
+                // Check for Admin user
+                if (profile.userId === 'admin-user-id') { // Change 'admin-user-id' to your actual admin User ID
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Image upload
+            document.getElementById('productImage').addEventListener('change', handleImageUpload);
+
+            // Character count for message
+            document.getElementById('loveMessage').addEventListener('input', updateCharCount);
+
+            // Form submission
+            document.getElementById('mothersDayForm').addEventListener('submit', handleSubmit);
+
+            // Share buttons
+            document.getElementById('shareLineBtn').addEventListener('click', shareToLine);
+            document.getElementById('shareFacebookBtn').addEventListener('click', shareToFacebook);
+
+            // Admin panel
+            document.getElementById('viewDataBtn').addEventListener('click', viewAllData);
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('uploadArea').classList.add('hidden');
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateCharCount() {
+            const message = document.getElementById('loveMessage').value;
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = message.length;
+            if (message.length > 200) {
+                charCount.style.color = 'red';
+                document.getElementById('submitBtn').disabled = true;
+            } else {
+                charCount.style.color = 'inherit';
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const productName = document.getElementById('productName').value;
+            const loveMessage = document.getElementById('loveMessage').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+
+            if (!selectedImage || !productName || !loveMessage || !phoneNumber) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+                    text: 'โปรดอัปโหลดรูปภาพผลิตภัณฑ์และกรอกข้อมูลให้ครบทุกช่อง',
+                    confirmButtonColor: '#FF69B4'
                 });
-            })
-            .withFailureHandler((error) => {
-              showError('เกิดข้อผิดพลาดในการลบคูปองจาก LINE API: ' + error.message);
-            })
-            .deleteCoupon(item.keyword);
-        }
-      });
-    }
+                return;
+            }
 
-    // ฟังก์ชันโมดอลจัดการคีย์เวิร์ดของผู้ใช้
-    function showUserKeywordModal(userId) {
-      const user = userData.find(item => item.id === userId);
-      if (!user) return;
-      
-      document.getElementById('userKeywordModalTitle').textContent = `จัดการคีย์เวิร์ดสำหรับ ${user.displayName || 'ผู้ใช้'}`;
-      document.getElementById('userIdField').value = userId;
-      
-      const checkboxesContainer = document.getElementById('keywordCheckboxes');
-      checkboxesContainer.innerHTML = '';
-      
-      allKeywords.forEach(keyword => {
-        const isChecked = user.allowedKeywords && user.allowedKeywords[keyword.keyword] ? 'checked' : '';
-        const checkbox = `
-          <label class="checkbox-label">
-            <input type="checkbox" name="keyword" value="${keyword.keyword}" ${isChecked}>
-            ${keyword.keyword} (${keyword.type === 'richmenu' ? 'Rich Menu' : keyword.type === 'custom' ? 'Custom Command' : 'Coupon'})
-          </label>
-        `;
-        checkboxesContainer.innerHTML += checkbox;
-      });
-      
-      document.getElementById('userKeywordModal').classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function hideUserKeywordModal() {
-      document.getElementById('userKeywordModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('saveUserKeywordBtnText').classList.remove('hidden');
-      document.getElementById('saveUserKeywordBtnSpinner').classList.add('hidden');
-      document.getElementById('saveUserKeywordBtn').disabled = false;
-    }
-
-    function saveUserKeywordData() {
-      const userId = document.getElementById('userIdField').value;
-      if (!userId) {
-        showError('ไม่พบ User ID');
-        return;
-      }
-      
-      const checkboxes = document.querySelectorAll('#keywordCheckboxes input[name="keyword"]:checked');
-      const allowedKeywords = {};
-      checkboxes.forEach(checkbox => {
-        allowedKeywords[checkbox.value] = true;
-      });
-      
-      document.getElementById('saveUserKeywordBtnText').classList.add('hidden');
-      document.getElementById('saveUserKeywordBtnSpinner').classList.remove('hidden');
-      document.getElementById('saveUserKeywordBtn').disabled = true;
-      
-      database.ref(`userData/${userId}/allowedKeywords`).set(allowedKeywords)
-        .then(() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'สำเร็จ!',
-            text: 'อัปเดตคีย์เวิร์ดที่อนุญาตสำเร็จ',
-            confirmButtonColor: '#4f46e5',
-            timer: 1500,
-            timerProgressBar: true
-          });
-          hideUserKeywordModal();
-          loadAllData();
-        })
-        .catch((error) => {
-          showError('เกิดข้อผิดพลาดในการบันทึกคีย์เวิร์ด: ' + error.message);
-          document.getElementById('saveUserKeywordBtnText').classList.remove('hidden');
-          document.getElementById('saveUserKeywordBtnSpinner').classList.add('hidden');
-          document.getElementById('saveUserKeywordBtn').disabled = false;
-        });
-    }
-
-    function confirmDeleteUser(userId) {
-      const user = userData.find(item => item.id === userId);
-      if (!user) return;
-      
-      Swal.fire({
-        title: 'ยืนยันการลบผู้ใช้?',
-        html: `คุณแน่ใจที่จะลบข้อมูลของ <b>${user.displayName || 'ผู้ใช้'}</b> หรือไม่?<br>การกระทำนี้ไม่สามารถยกเลิกได้`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, ลบเลย!',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          database.ref(`userData/${userId}`).remove()
-            .then(() => {
-              Swal.fire({
-                icon: 'success',
-                title: 'ลบสำเร็จ!',
-                text: 'ข้อมูลผู้ใช้ถูกลบแล้ว',
-                confirmButtonColor: '#4f46e5',
-                timer: 1500,
-                timerProgressBar: true
-              });
-              loadAllData();
-            })
-            .catch((error) => {
-              showError('เกิดข้อผิดพลาดในการลบ: ' + error.message);
+            Swal.fire({
+                title: 'กำลังบันทึกข้อมูล...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
+
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('action', 'submit');
+                formData.append('userId', liffProfile?.userId || 'test-user');
+                formData.append('displayName', liffProfile?.displayName || 'ผู้ใช้ทดสอบ');
+                formData.append('pictureUrl', liffProfile?.pictureUrl || '');
+                formData.append('productName', productName);
+                formData.append('loveMessage', loveMessage);
+                formData.append('phoneNumber', phoneNumber);
+                formData.append('productImage', selectedImage);
+                formData.append('timestamp', new Date().toISOString());
+
+                // Submit to Google Apps Script
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    submissionData = {
+                        productName,
+                        loveMessage,
+                        phoneNumber,
+                        imageUrl: result.data.imageUrl,
+                        displayName: liffProfile?.displayName || 'ผู้ใช้ทดสอบ'
+                    };
+
+                    // Show share section
+                    document.getElementById('shareSection').classList.remove('hidden');
+                    document.getElementById('mothersDayForm').style.display = 'none';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ!',
+                        text: 'ขอบคุณที่ร่วมกิจกรรมค่ะ',
+                        confirmButtonColor: '#FF69B4'
+                    });
+                } else {
+                    throw new Error(result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: `ไม่สามารถบันทึกข้อมูลได้: ${error.message}`,
+                    confirmButtonColor: '#FF69B4'
+                });
+            }
         }
-      });
-    }
 
-    // ฟังก์ชันอรรถประโยชน์
-    function showLoading() {
-      document.getElementById('loadingScreen').classList.remove('hidden');
-    }
+        function shareToLine() {
+            if (!submissionData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'กรุณาส่งข้อมูลกิจกรรมก่อนแชร์',
+                    confirmButtonColor: '#FF69B4'
+                });
+                return;
+            }
 
-    function hideLoading() {
-      document.getElementById('loadingScreen').classList.add('hidden');
-    }
+            const shareText = `💖 ${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
 
-    function showError(message) {
-      hideLoading();
-      hideRichmenuModal();
-      hideCustomModal();
-      hideCouponModal();
-      hideUserKeywordModal();
-      
-      Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: message,
-        confirmButtonColor: '#4f46e5',
-      });
-    }
+            if (liff.isApiAvailable('shareTargetPicker')) {
+                liff.shareTargetPicker([{
+                    type: 'text',
+                    text: shareText
+                }, {
+                    type: 'image',
+                    originalContentUrl: submissionData.imageUrl,
+                    previewImageUrl: submissionData.imageUrl
+                }]);
+            } else {
+                // Fallback for older LIFF versions
+                navigator.clipboard.writeText(shareText);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'คัดลอกข้อความแล้ว',
+                    text: 'กรุณาวางข้อความเพื่อแชร์ใน LINE',
+                    confirmButtonColor: '#06C755'
+                });
+            }
+        }
 
-    document.addEventListener('DOMContentLoaded', initializeApp);
+        function shareToFacebook() {
+            if (!submissionData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'กรุณาส่งข้อมูลกิจกรรมก่อนแชร์',
+                    confirmButtonColor: '#FF69B4'
+                });
+                return;
+            }
 
-    window.FirebaseRichMenuManager = {
-      getRichmenuData: () => richmenuData,
-      getCustomData: () => customData,
-      getCouponData: () => couponData,
-      getUserData: () => userData,
-      getAccessToken: () => accessToken,
-      database: () => database
-    };
-  </script>
+            const shareText = `${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
+            const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
+
+            // Track Facebook share
+            trackShare('facebook', fbUrl);
+
+            window.open(fbUrl, '_blank', 'width=600,height=400');
+        }
+
+        async function trackShare(platform, shareUrl) {
+            try {
+                const formData = new FormData();
+                formData.append('action', 'trackShare');
+                formData.append('userId', liffProfile?.userId || 'test-user');
+                formData.append('platform', platform);
+                formData.append('shareUrl', shareUrl);
+                formData.append('timestamp', new Date().toISOString());
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (error) {
+                console.error('Failed to track share:', error);
+            }
+        }
+
+        async function viewAllData() {
+            try {
+                Swal.fire({
+                    title: 'กำลังโหลดข้อมูล...',
+                    text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch(`${GAS_URL}?action=viewData`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const tableHtml = generateDataTable(data.data);
+
+                    Swal.fire({
+                        title: 'ข้อมูลกิจกรรมวันแม่',
+                        width: '90%',
+                        html: `<div style="max-height: 500px; overflow-y: auto;">
+                                <style>
+                                    table { width: 100%; border-collapse: collapse; }
+                                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                                    th { background-color: #FF69B4; color: white; }
+                                    img { max-width: 100px; height: auto; }
+                                </style>
+                                ${tableHtml}
+                            </div>`,
+                        confirmButtonColor: '#FF69B4'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: data.message || 'ไม่สามารถโหลดข้อมูลได้',
+                        confirmButtonColor: '#FF69B4'
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to view data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: `เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`,
+                    confirmButtonColor: '#FF69B4'
+                });
+            }
+        }
+
+        function generateDataTable(data) {
+            if (!data || data.length === 0) {
+                return '<p>ไม่มีข้อมูล</p>';
+            }
+
+            let html = '<table><thead><tr>';
+            html += '<th>วันที่</th><th>ชื่อ</th><th>ผลิตภัณฑ์</th><th>ข้อความ</th><th>โทรศัพท์</th><th>รูปภาพ</th><th>การแชร์</th>';
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                html += '<tr>';
+                html += `<td>${new Date(row['วันที่']).toLocaleDateString('th-TH')}</td>`;
+                html += `<td>${row['ชื่อผู้ใช้'] || ''}</td>`;
+                html += `<td>${row['ชื่อผลิตภัณฑ์'] || ''}</td>`;
+                html += `<td>${row['ข้อความรักแม่'] || ''}</td>`;
+                html += `<td>${row['เบอร์โทรศัพท์'] || ''}</td>`;
+                html += `<td>${row['รูปผลิตภัณฑ์'] ? `<img src="${row['รูปผลิตภัณฑ์']}" alt="Product">` : ''}</td>`;
+                html += `<td>${row['จำนวนแชร์'] || 0} ครั้ง</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+    </script>
 </body>
 </html>
