@@ -126,15 +126,6 @@
         </div>
     </div>
 
-    <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg">
-            <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-mother mx-auto mb-4"></div>
-                <p>กำลังบันทึกข้อมูล...</p>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Global variables
         let liffProfile = null;
@@ -142,10 +133,10 @@
         let submissionData = null;
         
         // LIFF Configuration
-        const LIFF_ID = '1657132355-ZdM6EdWK'; // ใส่ LIFF ID ของคุณ
+        const LIFF_ID = '1657132355-ZdM6EdWK';
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuAgmG-CK6_pd0Syh6Le67pQXX8z39FABhP2P1lZzSqtFvEVoijTOnDQ0y_VF2q0TznQ/exec';
         const HASHTAGS = '#วันแม่2025 #แสดงความรักแม่ #รักแม่ #MothersDay2025';
-
+        
         // Initialize LIFF
         window.onload = function() {
             initializeLiff();
@@ -179,6 +170,11 @@
                 document.getElementById('displayName').textContent = profile.displayName;
                 document.getElementById('userId').textContent = profile.userId;
                 document.getElementById('profileSection').classList.remove('hidden');
+
+                // ตรวจสอบว่าเป็น Admin
+                if (profile.userId === 'admin-user-id') { // เปลี่ยน 'admin-user-id' เป็น User ID ของแอดมิน
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                }
             } catch (error) {
                 console.error('Failed to load profile:', error);
             }
@@ -218,7 +214,15 @@
 
         function updateCharCount() {
             const message = document.getElementById('loveMessage').value;
-            document.getElementById('charCount').textContent = message.length;
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = message.length;
+            if (message.length > 200) {
+                charCount.style.color = 'red';
+                document.getElementById('submitBtn').disabled = true;
+            } else {
+                charCount.style.color = 'inherit';
+                document.getElementById('submitBtn').disabled = false;
+            }
         }
 
         async function handleSubmit(event) {
@@ -238,7 +242,14 @@
                 return;
             }
 
-            showLoading(true);
+            Swal.fire({
+                title: 'กำลังบันทึกข้อมูล...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             try {
                 // Prepare form data
@@ -262,12 +273,11 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // ใช้ imageUrl ที่ได้จาก Apps Script
                     submissionData = {
                         productName,
                         loveMessage,
                         phoneNumber,
-                        imageUrl: result.data.imageUrl, // แก้ไขตรงนี้ให้รับค่าจาก result.data.imageUrl
+                        imageUrl: result.data.imageUrl,
                         displayName: liffProfile?.displayName || 'ผู้ใช้ทดสอบ'
                     };
 
@@ -287,18 +297,16 @@
                         confirmButtonColor: '#FF69B4'
                     });
                 } else {
-                    throw new Error(result.error || 'เกิดข้อผิดพลาด');
+                    throw new Error(result.message || 'เกิดข้อผิดพลาด');
                 }
             } catch (error) {
                 console.error('Submission error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง',
+                    text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง: ' + error.message,
                     confirmButtonColor: '#FF69B4'
                 });
-            } finally {
-                showLoading(false);
             }
         }
 
@@ -312,7 +320,7 @@
                     type: 'bubble',
                     hero: {
                         type: 'image',
-                        url: submissionData.imageUrl, // ใช้ imageUrl ที่ได้จาก GAS
+                        url: submissionData.imageUrl,
                         size: 'full',
                         aspectRatio: '20:13',
                         aspectMode: 'cover'
@@ -376,10 +384,11 @@
                     text: shareText
                 }, {
                     type: 'image',
-                    originalContentUrl: submissionData.imageUrl, // ใช้ imageUrl ที่ได้จาก GAS
-                    previewImageUrl: submissionData.imageUrl // ใช้ imageUrl ที่ได้จาก GAS
+                    originalContentUrl: submissionData.imageUrl,
+                    previewImageUrl: submissionData.imageUrl
                 }]);
             } else {
+                // Fallback for older LIFF versions
                 navigator.clipboard.writeText(shareText);
                 Swal.fire({
                     icon: 'info',
@@ -405,17 +414,17 @@
             const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
             
             // Track Facebook share
-            trackFacebookShare(fbUrl);
+            trackShare('facebook', fbUrl);
             
             window.open(fbUrl, '_blank', 'width=600,height=400');
         }
 
-        async function trackFacebookShare(shareUrl) {
+        async function trackShare(platform, shareUrl) {
             try {
                 const formData = new FormData();
                 formData.append('action', 'trackShare');
                 formData.append('userId', liffProfile?.userId || 'test-user');
-                formData.append('platform', 'facebook');
+                formData.append('platform', platform);
                 formData.append('shareUrl', shareUrl);
                 formData.append('timestamp', new Date().toISOString());
 
@@ -430,7 +439,15 @@
 
         async function viewAllData() {
             try {
-                showLoading(true);
+                Swal.fire({
+                    title: 'กำลังโหลดข้อมูล...',
+                    text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 const response = await fetch(`${GAS_URL}?action=viewData`);
                 const data = await response.json();
                 
@@ -439,9 +456,8 @@
                     
                     Swal.fire({
                         title: 'ข้อมูลกิจกรรมวันแม่',
-                        width: '80%',
-                        html: `
-                            <div style="max-height: 500px; overflow-y: auto;">
+                        width: '90%',
+                        html: `<div style="max-height: 500px; overflow-y: auto;">
                                 <style>
                                     table { width: 100%; border-collapse: collapse; }
                                     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
@@ -449,16 +465,14 @@
                                     img { max-width: 100px; height: auto; }
                                 </style>
                                 ${tableHtml}
-                            </div>
-                        `,
+                            </div>`,
                         confirmButtonColor: '#FF69B4'
                     });
-
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'เกิดข้อผิดพลาด',
-                        text: data.error || 'ไม่สามารถโหลดข้อมูลได้',
+                        text: data.message || 'ไม่สามารถโหลดข้อมูลได้',
                         confirmButtonColor: '#FF69B4'
                     });
                 }
@@ -470,8 +484,6 @@
                     text: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
                     confirmButtonColor: '#FF69B4'
                 });
-            } finally {
-                showLoading(false);
             }
         }
 
@@ -486,13 +498,14 @@
 
             data.forEach(row => {
                 html += '<tr>';
-                html += `<td>${row.timestamp || ''}</td>`;
-                html += `<td>${row.displayName || ''}</td>`;
-                html += `<td>${row.productName || ''}</td>`;
-                html += `<td>${row.loveMessage || ''}</td>`;
-                html += `<td>${row.phoneNumber || ''}</td>`;
-                html += `<td>${row.imageUrl ? `<img src="${row.imageUrl}" alt="Product">` : ''}</td>`;
-                html += `<td>${row.shareCount || 0} ครั้ง</td>`;
+                html += `<td>${new Date(row['วันที่']).toLocaleDateString('th-TH')}</td>`;
+                html += `<td>${row['ชื่อผู้ใช้'] || ''}</td>`;
+                html += `<td>${row['ชื่อผลิตภัณฑ์'] || ''}</td>`;
+                html += `<td>${row['ข้อความรักแม่'] || ''}</td>`;
+                html += `<td>${row['เบอร์โทรศัพท์'] || ''}</td>`;
+                // ใช้รูปโปรไฟล์แทน imageUrl ในตารางแสดงผล
+                html += `<td>${row['รูปผลิตภัณฑ์'] ? `<img src="${row['รูปผลิตภัณฑ์']}" alt="Product">` : ''}</td>`;
+                html += `<td>${row['จำนวนแชร์'] || 0} ครั้ง</td>`;
                 html += '</tr>';
             });
 
@@ -500,19 +513,6 @@
             return html;
         }
 
-        function showLoading(show) {
-            const modal = document.getElementById('loadingModal');
-            if (show) {
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
-
-        // Show admin panel for specific users (you can modify this condition)
-        if (liffProfile?.userId === 'admin-user-id') {
-            document.getElementById('adminPanel').classList.remove('hidden');
-        }
     </script>
 </body>
 </html>
