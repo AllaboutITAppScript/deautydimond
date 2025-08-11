@@ -7,6 +7,7 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -21,7 +22,6 @@
     </script>
 </head>
 <body class="bg-gradient-to-br from-pink-50 to-pink-100 min-h-screen">
-    <!-- Header -->
     <div class="bg-gradient-to-r from-pink-mother to-red-400 text-white p-4 shadow-lg">
         <div class="container mx-auto text-center">
             <i class="fas fa-heart text-3xl mb-2"></i>
@@ -30,7 +30,6 @@
         </div>
     </div>
 
-    <!-- Profile Section -->
     <div id="profileSection" class="container mx-auto p-4 hidden">
         <div class="bg-white rounded-lg shadow-md p-4 mb-4">
             <div class="flex items-center space-x-4">
@@ -43,10 +42,8 @@
         </div>
     </div>
 
-    <!-- Main Form -->
     <div class="container mx-auto p-4">
         <form id="mothersDayForm" class="bg-white rounded-lg shadow-lg p-6">
-            <!-- Product Image Upload -->
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-camera mr-2"></i>อัปโหลดรูปผลิตภัณฑ์
@@ -64,7 +61,6 @@
                 </div>
             </div>
 
-            <!-- Love Message -->
             <div class="mb-6">
                 <label for="loveMessage" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-heart mr-2"></i>ข้อความบอกรักแม่
@@ -77,7 +73,6 @@
                 </p>
             </div>
 
-            <!-- Product Name -->
             <div class="mb-6">
                 <label for="productName" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-tag mr-2"></i>ชื่อผลิตภัณฑ์ที่ซื้อ
@@ -87,7 +82,6 @@
                     placeholder="ระบุชื่อผลิตภัณฑ์">
             </div>
 
-            <!-- Contact Info -->
             <div class="mb-6">
                 <label for="phoneNumber" class="block text-gray-700 text-sm font-bold mb-2">
                     <i class="fas fa-phone mr-2"></i>เบอร์โทรศัพท์
@@ -97,27 +91,23 @@
                     placeholder="เบอร์โทรศัพท์สำหรับติดต่อ">
             </div>
 
-            <!-- Submit Button -->
             <button type="submit" id="submitBtn" 
                 class="w-full bg-gradient-to-r from-pink-mother to-red-400 text-white font-bold py-3 px-4 rounded-lg hover:from-pink-600 hover:to-red-500 transition duration-300">
                 <i class="fas fa-paper-plane mr-2"></i>ส่งข้อมูล
             </button>
         </form>
 
-        <!-- Share Section -->
         <div id="shareSection" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4 text-center">
                 <i class="fas fa-share-alt mr-2"></i>แชร์ความรักให้แม่
             </h3>
             
             <div class="space-y-4">
-                <!-- LINE Share -->
                 <button id="shareLineBtn" 
                     class="w-full bg-line-green text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition duration-300">
                     <i class="fab fa-line mr-2"></i>แชร์ใน LINE
                 </button>
 
-                <!-- Facebook Share -->
                 <button id="shareFacebookBtn" 
                     class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
                     <i class="fab fa-facebook-f mr-2"></i>แชร์ใน Facebook
@@ -125,7 +115,6 @@
             </div>
         </div>
 
-        <!-- Admin Panel -->
         <div id="adminPanel" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4">
                 <i class="fas fa-cog mr-2"></i>ตรวจสอบข้อมูล
@@ -137,7 +126,6 @@
         </div>
     </div>
 
-    <!-- Loading Modal -->
     <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg">
             <div class="text-center">
@@ -241,7 +229,12 @@
             const phoneNumber = document.getElementById('phoneNumber').value;
 
             if (!selectedImage || !productName || !loveMessage || !phoneNumber) {
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+                    text: 'โปรดอัปโหลดรูปภาพผลิตภัณฑ์และกรอกข้อมูลให้ครบทุกช่อง',
+                    confirmButtonColor: '#FF69B4'
+                });
                 return;
             }
 
@@ -278,19 +271,31 @@
                     };
 
                     // Send message to LINE chat
-                    await sendMessageToLine();
+                    if (liff.isApiAvailable('sendMessages')) {
+                        await sendMessageToLine();
+                    }
                     
                     // Show share section
                     document.getElementById('shareSection').classList.remove('hidden');
                     document.getElementById('mothersDayForm').style.display = 'none';
                     
-                    alert('บันทึกข้อมูลสำเร็จ!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ!',
+                        text: 'ขอบคุณที่ร่วมกิจกรรมค่ะ',
+                        confirmButtonColor: '#FF69B4'
+                    });
                 } else {
                     throw new Error(result.error || 'เกิดข้อผิดพลาด');
                 }
             } catch (error) {
                 console.error('Submission error:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง',
+                    confirmButtonColor: '#FF69B4'
+                });
             } finally {
                 showLoading(false);
             }
@@ -345,7 +350,15 @@
         }
 
         function shareToLine() {
-            if (!submissionData) return;
+            if (!submissionData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'กรุณาส่งข้อมูลกิจกรรมก่อนแชร์',
+                    confirmButtonColor: '#FF69B4'
+                });
+                return;
+            }
             
             const shareText = `💖 ${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
             
@@ -355,14 +368,26 @@
                     text: shareText
                 }]);
             } else {
-                // Fallback: copy to clipboard
                 navigator.clipboard.writeText(shareText);
-                alert('คัดลอกข้อความแล้ว กรุณาไปแชร์ใน LINE');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'คัดลอกข้อความแล้ว',
+                    text: 'กรุณาวางข้อความเพื่อแชร์ใน LINE',
+                    confirmButtonColor: '#06C755'
+                });
             }
         }
 
         function shareToFacebook() {
-            if (!submissionData) return;
+            if (!submissionData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'กรุณาส่งข้อมูลกิจกรรมก่อนแชร์',
+                    confirmButtonColor: '#FF69B4'
+                });
+                return;
+            }
             
             const shareText = `${submissionData.loveMessage}\n\nผลิตภัณฑ์: ${submissionData.productName}\n\n${HASHTAGS}`;
             const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
@@ -393,34 +418,48 @@
 
         async function viewAllData() {
             try {
+                showLoading(true);
                 const response = await fetch(`${GAS_URL}?action=viewData`);
                 const data = await response.json();
                 
                 if (data.success) {
                     const tableHtml = generateDataTable(data.data);
-                    const newWindow = window.open('', '_blank');
-                    newWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>ข้อมูลกิจกรรมวันแม่</title>
-                            <style>
-                                body { font-family: Arial, sans-serif; padding: 20px; }
-                                table { width: 100%; border-collapse: collapse; }
-                                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                                th { background-color: #FF69B4; color: white; }
-                                img { max-width: 100px; height: auto; }
-                            </style>
-                        </head>
-                        <body>
-                            <h1>ข้อมูลกิจกรรมวันแม่</h1>
-                            ${tableHtml}
-                        </body>
-                        </html>
-                    `);
+                    
+                    Swal.fire({
+                        title: 'ข้อมูลกิจกรรมวันแม่',
+                        width: '80%',
+                        html: `
+                            <div style="max-height: 500px; overflow-y: auto;">
+                                <style>
+                                    table { width: 100%; border-collapse: collapse; }
+                                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                                    th { background-color: #FF69B4; color: white; }
+                                    img { max-width: 100px; height: auto; }
+                                </style>
+                                ${tableHtml}
+                            </div>
+                        `,
+                        confirmButtonColor: '#FF69B4'
+                    });
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: data.error || 'ไม่สามารถโหลดข้อมูลได้',
+                        confirmButtonColor: '#FF69B4'
+                    });
                 }
             } catch (error) {
                 console.error('Failed to view data:', error);
-                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
+                    confirmButtonColor: '#FF69B4'
+                });
+            } finally {
+                showLoading(false);
             }
         }
 
