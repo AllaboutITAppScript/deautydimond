@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเช็คอินและแลกรางวัล</title>
+    <title>ระบบแลกรางวัล</title>
     <link href="https://cdn.jsdelivr.net/gh/maketline/goodday/font/stylesheet.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -213,19 +213,41 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Check-in Calendar */
+        /* Check-in Calendar - DISABLED STYLE */
         .checkin-calendar {
             background: white;
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .checkin-calendar::before {
+            content: "⏸️ ปิดปรับปรุงชั่วคราว";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 10;
+            text-align: center;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .calendar-header {
             text-align: center;
             margin-bottom: 20px;
             color: #333;
+            filter: blur(2px);
+            pointer-events: none;
         }
 
         .calendar-header h3 {
@@ -247,6 +269,8 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 10px;
             margin-bottom: 20px;
+            filter: blur(2px);
+            pointer-events: none;
         }
 
         .day-card {
@@ -255,7 +279,6 @@
             border-radius: 10px;
             background: #f8f9fa;
             transition: all 0.3s;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
         }
@@ -263,22 +286,6 @@
         .day-card.checked {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
-            transform: scale(1.05);
-        }
-
-        .day-card.today {
-            border: 2px solid #ee5a24;
-            background: white;
-        }
-
-        .day-card.today:not(.checked) {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(238, 90, 36, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(238, 90, 36, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(238, 90, 36, 0); }
         }
 
         .day-name {
@@ -328,26 +335,16 @@
         .checkin-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #ee5a24 0%, #f368e0 100%);
-            color: white;
+            background: #ccc;
+            color: #666;
             border: none;
             border-radius: 10px;
             font-size: 18px;
             font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
-        }
-
-        .checkin-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
-        }
-
-        .checkin-btn:disabled {
-            background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
+            filter: blur(2px);
+            pointer-events: none;
         }
 
         /* Rewards Section */
@@ -560,16 +557,15 @@
             </div>
         </div>
 
-        <!-- Navigation -->
+        <!-- Navigation - Hide Check-in Tab -->
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('checkin')">เช็คอิน</div>
-            <div class="nav-tab" onclick="switchTab('rewards')">แลกรางวัล</div>
+            <div id="rewardsTab" class="nav-tab active" onclick="switchTab('rewards')">แลกรางวัล</div>
             <div id="adminTab" class="nav-tab" onclick="switchTab('admin')" style="display: none;">จัดการ</div>
             <div id="scanTab" class="nav-tab" onclick="switchTab('scan')" style="display: none;">สแกน QR</div>
         </div>
 
-        <!-- Check-in Section -->
-        <div id="checkinSection" class="content-section active">
+        <!-- Check-in Section - Hidden by default -->
+        <div id="checkinSection" class="content-section" style="display: none;">
             <div class="checkin-calendar">
                 <div class="calendar-header">
                     <h3>เช็คอินประจำสัปดาห์</h3>
@@ -580,14 +576,14 @@
                 <div class="weekdays" id="weekdaysContainer">
                     <!-- Generated by JS -->
                 </div>
-                <button id="checkinBtn" class="checkin-btn" onclick="performCheckin()">
-                    เช็คอินวันนี้
+                <button id="checkinBtn" class="checkin-btn" onclick="showCheckinDisabledMessage()" disabled>
+                    ปิดบริการชั่วคราว
                 </button>
             </div>
         </div>
 
-        <!-- Rewards Section -->
-        <div id="rewardsSection" class="content-section">
+        <!-- Rewards Section - Default active tab -->
+        <div id="rewardsSection" class="content-section active">
             <h3 style="margin-bottom: 15px; color: #333;">รางวัลที่สามารถแลกได้</h3>
             <div class="rewards-grid" id="rewardsContainer">
                 <!-- Generated by JS -->
@@ -1182,7 +1178,6 @@
                 currentStreak = data.streak || 0;
                 
                 document.getElementById('userPoints').textContent = userPoints.toFixed(1);
-                document.getElementById('streakCount').textContent = currentStreak;
                 
                 if (isAdmin) {
                     document.getElementById('adminTab').style.display = 'block';
@@ -1190,12 +1185,75 @@
                     loadPendingRedemptions();
                 }
                 
-                updateCalendar();
                 updateRewards();
             }
         }
 
-        // Update calendar display
+        // Show checkin disabled message
+        function showCheckinDisabledMessage() {
+            Swal.fire({
+                ...SweetAlertConfig.warning,
+                title: '⏸️ บริการปิดชั่วคราว',
+                html: `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="
+                            width: 100px;
+                            height: 100px;
+                            background: linear-gradient(135deg, #ff9800, #ffc107);
+                            border-radius: 50%;
+                            margin: 0 auto 25px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 50px;
+                            color: white;
+                            animation: pulse 2s infinite;
+                        ">⏸️</div>
+                        
+                        <div style="
+                            background: linear-gradient(135deg, #fff3e0, #fff8e1);
+                            border-radius: 15px;
+                            padding: 25px;
+                            margin-bottom: 20px;
+                            border: 2px solid #ff9800;
+                        ">
+                            <h3 style="color: #f57c00; margin-bottom: 15px; font-size: 18px;">
+                                บริการเช็คอินปิดปรับปรุงชั่วคราว
+                            </h3>
+                            <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                                ขณะนี้ระบบเช็คอินกำลังปิดปรับปรุงเพื่อพัฒนาประสบการณ์การใช้งาน<br>
+                                คุณยังสามารถใช้แต้มแลกรางวัลและใช้งานฟังก์ชันอื่นๆ ได้ตามปกติ
+                            </p>
+                        </div>
+                        
+                        <div style="
+                            background: #e8f5e8;
+                            border-radius: 10px;
+                            padding: 15px;
+                            font-size: 14px;
+                            color: #2d5a2d;
+                        ">
+                            💡 <strong>ใช้งานฟังก์ชันอื่นได้ตามปกติ:</strong><br>
+                            ✅ แลกรางวัลด้วยแต้ม<br>
+                            ✅ ดูประวัติการแลกรางวัล<br>
+                            ✅ แอดมิน: อนุมัติรางวัลและสแกน QR
+                        </div>
+                    </div>
+                    
+                    <style>
+                        @keyframes pulse {
+                            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+                            70% { box-shadow: 0 0 0 20px rgba(255, 152, 0, 0); }
+                            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+                        }
+                    </style>
+                `,
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+
+        // Update calendar display - Disabled version
         function updateCalendar() {
             const container = document.getElementById('weekdaysContainer');
             container.innerHTML = '';
@@ -1221,16 +1279,6 @@
                 
                 if (isChecked) {
                     dayCard.classList.add('checked');
-                }
-                
-                if (i === currentDay) {
-                    dayCard.classList.add('today');
-                    if (!isChecked) {
-                        document.getElementById('checkinBtn').disabled = false;
-                    } else {
-                        document.getElementById('checkinBtn').disabled = true;
-                        document.getElementById('checkinBtn').textContent = 'เช็คอินแล้ววันนี้';
-                    }
                 }
                 
                 const points = (i === 6 && currentStreak >= 6) ? 1 : 0.5;
@@ -1278,284 +1326,9 @@
             });
         }
 
-        // Perform check-in
+        // Perform check-in - Disabled
         function performCheckin() {
-            showLoading();
-            
-            const script = document.createElement('script');
-            const callbackName = 'checkinCallback_' + Date.now();
-            
-            window[callbackName] = function(data) {
-                hideLoading();
-                handleCheckinResponse(data);
-                delete window[callbackName];
-                document.body.removeChild(script);
-            };
-            
-            script.src = `${GOOGLE_SCRIPT_URL}?action=checkin&userId=${userId}&userName=${encodeURIComponent(userProfile.displayName)}&callback=${callbackName}`;
-            document.body.appendChild(script);
-        }
-
-        function handleCheckinResponse(data) {
-            if (data.success) {
-                Swal.fire({
-                    ...SweetAlertConfig.success,
-                    title: '🎉 เช็คอินสำเร็จ!',
-                    html: `
-                        <div style="text-align: center; padding: 20px;">
-                            <div style="
-                                width: 100px;
-                                height: 100px;
-                                background: linear-gradient(135deg, #11998e, #38ef7d);
-                                border-radius: 50%;
-                                margin: 0 auto 25px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                font-size: 50px;
-                                color: white;
-                                animation: bounce 1.5s ease-in-out infinite;
-                                box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
-                            ">🎁</div>
-                            
-                            <div style="
-                                background: linear-gradient(135deg, #e8f5e8, #f0fff0);
-                                border-radius: 15px;
-                                padding: 20px;
-                                margin-bottom: 20px;
-                                border: 2px solid #11998e;
-                            ">
-                                <h3 style="color: #11998e; margin-bottom: 10px; font-size: 18px;">
-                                    ✨ คุณได้รับ ${data.pointsEarned} แต้ม
-                                </h3>
-                                <p style="color: #666; font-size: 14px;">
-                                    💰 แต้มสะสมรวม: <strong>${data.totalPoints} แต้ม</strong><br>
-                                    🔥 เช็คอินติดต่อกัน: <strong>${data.streak} วัน</strong>
-                                </p>
-                            </div>
-                            
-                            ${data.streak >= 7 ? `
-                                <div style="
-                                    background: linear-gradient(135deg, #ffd700, #ffed4a);
-                                    border-radius: 12px;
-                                    padding: 15px;
-                                    color: #b8860b;
-                                    font-weight: bold;
-                                    margin-bottom: 15px;
-                                ">
-                                    🏆 ยินดีด้วย! เช็คอินครบ 7 วันแล้ว
-                                </div>
-                            ` : `
-                                <div style="
-                                    background: #f8f9fa;
-                                    border-radius: 8px;
-                                    padding: 12px;
-                                    color: #666;
-                                    font-size: 14px;
-                                ">
-                                    📅 เช็คอินอีก ${7-data.streak} วัน รับแต้มพิเศษ!
-                                </div>
-                            `}
-                        </div>
-                        
-                        <style>
-                            @keyframes bounce {
-                                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-                                40% { transform: translateY(-20px); }
-                                60% { transform: translateY(-10px); }
-                            }
-                        </style>
-                    `,
-                    showConfirmButton: false,
-                    timer: 3000
-                });
-                
-                // Send Flex Message to chat
-                sendFlexMessage(data.pointsEarned, data.totalPoints, data.streak);
-                
-                loadUserData();
-            } else {
-                Swal.fire({
-                    ...SweetAlertConfig.error,
-                    title: 'เกิดข้อผิดพลาด',
-                    text: data.message || 'ไม่สามารถเช็คอินได้',
-                });
-            }
-        }
-
-        // Send Flex Message
-        async function sendFlexMessage(pointsEarned, totalPoints, streak) {
-            const flexMessage = {
-                type: 'flex',
-                altText: '✅ เช็คอินสำเร็จ!',
-                contents: {
-                    type: 'bubble',
-                    size: 'mega',
-                    body: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            {
-                                type: 'box',
-                                layout: 'horizontal',
-                                contents: [
-                                    {
-                                        type: 'box',
-                                        layout: 'vertical',
-                                        contents: [
-                                            {
-                                                type: 'image',
-                                                url: userProfile.pictureUrl || 'https://via.placeholder.com/40',
-                                                size: '40px',
-                                                aspectMode: 'cover',
-                                                aspectRatio: '1:1'
-                                            }
-                                        ],
-                                        width: '40px',
-                                        height: '40px',
-                                        cornerRadius: '20px'
-                                    },
-                                    {
-                                        type: 'text',
-                                        text: userProfile.displayName,
-                                        size: 'sm',
-                                        color: '#666666',
-                                        margin: 'md',
-                                        gravity: 'center'
-                                    },
-                                    {
-                                        type: 'filler'
-                                    }
-                                ],
-                                margin: 'none'
-                            },
-                            {
-                                type: 'text',
-                                text: '✅ เช็คอินสำเร็จ!',
-                                weight: 'bold',
-                                size: 'xl',
-                                color: '#11998e',
-                                align: 'center',
-                                margin: 'md'
-                            },
-                            {
-                                type: 'separator',
-                                margin: 'md'
-                            },
-                            {
-                                type: 'box',
-                                layout: 'vertical',
-                                margin: 'lg',
-                                spacing: 'sm',
-                                contents: [
-                                    {
-                                        type: 'box',
-                                        layout: 'horizontal',
-                                        contents: [
-                                            {
-                                                type: 'text',
-                                                text: '🎁 แต้มที่ได้รับ',
-                                                size: 'md',
-                                                color: '#666666',
-                                                flex: 0
-                                            },
-                                            {
-                                                type: 'text',
-                                                text: `+${pointsEarned} แต้ม`,
-                                                size: 'md',
-                                                weight: 'bold',
-                                                color: '#11998e',
-                                                align: 'end'
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        type: 'box',
-                                        layout: 'horizontal',
-                                        contents: [
-                                            {
-                                                type: 'text',
-                                                text: '💰 แต้มสะสมทั้งหมด',
-                                                size: 'md',
-                                                color: '#666666',
-                                                flex: 0
-                                            },
-                                            {
-                                                type: 'text',
-                                                text: `${totalPoints} แต้ม`,
-                                                size: 'lg',
-                                                weight: 'bold',
-                                                color: '#ee5a24',
-                                                align: 'end'
-                                            }
-                                        ],
-                                        margin: 'sm'
-                                    },
-                                    {
-                                        type: 'box',
-                                        layout: 'horizontal',
-                                        contents: [
-                                            {
-                                                type: 'text',
-                                                text: '🔥 เช็คอินติดต่อกัน',
-                                                size: 'md',
-                                                color: '#666666',
-                                                flex: 0
-                                            },
-                                            {
-                                                type: 'text',
-                                                text: `${streak} วัน`,
-                                                size: 'md',
-                                                weight: 'bold',
-                                                color: '#764ba2',
-                                                align: 'end'
-                                            }
-                                        ],
-                                        margin: 'sm'
-                                    }
-                                ]
-                            },
-                            {
-                                type: 'box',
-                                layout: 'vertical',
-                                margin: 'lg',
-                                contents: [
-                                    {
-                                        type: 'text',
-                                        text: streak >= 7 ? '🎊 ยินดีด้วย! เช็คอินครบ 7 วันแล้ว' : `📅 เช็คอินอีก ${7-streak} วัน รับแต้มพิเศษ!`,
-                                        size: 'sm',
-                                        color: '#764ba2',
-                                        align: 'center',
-                                        wrap: true
-                                    }
-                                ],
-                                backgroundColor: '#f8f9fa',
-                                paddingAll: '10px',
-                                cornerRadius: '8px'
-                            },
-                            {
-                                type: 'button',
-                                style: 'primary',
-                                height: 'md',
-                                color: '#ee5a24',
-                                action: {
-                                    type: 'uri',
-                                    label: 'ดูแต้มและแลกรางวัล',
-                                    uri: liff.permanentLink.createUrl()
-                                },
-                                margin: 'xl'
-                            }
-                        ],
-                        paddingAll: '20px'
-                    }
-                }
-            };
-
-            try {
-                await liff.sendMessages([flexMessage]);
-            } catch (error) {
-                console.error('Error sending flex message', error);
-            }
+            showCheckinDisabledMessage();
         }
 
         // Redeem reward
