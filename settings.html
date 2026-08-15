@@ -399,7 +399,7 @@
         function addRow(ov) {
             var tr = document.createElement('tr');
             tr.innerHTML =
-                '<td data-label="วันที่"><input type="text" class="form-control form-control-sm ov-date" placeholder="YYYY-MM-DD" value="' + (ov && ov.date ? ov.date : '') + '"></td>' +
+                '<td data-label="วันที่"><input type="date" class="form-control form-control-sm ov-date" value="' + (ov && ov.date ? ov.date : '') + '"></td>' +
                 '<td data-label="เปิดงวดนี้" class="text-center"><input type="checkbox" class="ov-enabled" ' + (!ov || ov.enabled !== false ? 'checked' : '') + '></td>' +
                 '<td data-label="เวลาเปิด"><input type="time" class="form-control form-control-sm ov-open" value="' + (ov && ov.open ? ov.open : '06:00') + '"></td>' +
                 '<td data-label="เวลาปิด"><input type="time" class="form-control form-control-sm ov-close" value="' + (ov && ov.close ? ov.close : '14:00') + '"></td>' +
