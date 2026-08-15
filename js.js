@@ -11,6 +11,7 @@
 
 var config = null;       // null = ยังโหลด config ไม่เสร็จ
 var configLoaded = false;
+var renderedBannersKey = null;   // จำแถวรูปที่ render ไปแล้ว เพื่อไม่ต้องสร้างซ้ำ
 
 async function loadConfig() {
 	try {
@@ -35,6 +36,7 @@ async function loadConfig() {
 							if (gas.defaultOpen) config.defaultOpen = gas.defaultOpen;
 							if (gas.defaultClose) config.defaultClose = gas.defaultClose;
 							if (Array.isArray(gas.overrides)) config.overrides = gas.overrides;
+							if (Array.isArray(gas.banners)) config.banners = gas.banners;
 						}
 					}
 				} catch (e2) {
@@ -46,6 +48,52 @@ async function loadConfig() {
 		console.warn('โหลด config.json ไม่สำเร็จ ใช้ค่าเริ่มต้นเดิม', e);
 	}
 	configLoaded = true;
+	renderBanners(config ? config.banners : null);
+}
+
+// สร้างแถบรูปโปรโมชั่น (carousel) จากค่า banners ใน config — รูปแรกคือสไลด์แรก
+// ถ้ายังไม่มีค่า banners (หรือโหลด config ไม่สำเร็จ) จะใช้แถบรูปเดิมที่อยู่ใน index.html
+function renderBanners(banners) {
+	if (!banners || !Array.isArray(banners) || !banners.length) return;
+	var el = document.getElementById('carouselExampleCaptions');
+	if (!el) return;
+	var inner = el.querySelector('.carousel-inner');
+	var ind = el.querySelector('.carousel-indicators');
+	if (!inner || !ind) return;
+	var key = banners.join('|');
+	if (key === renderedBannersKey) return;   // รูปชุดเดิม → ไม่ต้องสร้างใหม่
+	renderedBannersKey = key;
+
+	ind.innerHTML = '';
+	inner.innerHTML = '';
+	banners.forEach(function (url, i) {
+		var btn = document.createElement('button');
+		btn.type = 'button';
+		btn.setAttribute('data-bs-target', '#carouselExampleCaptions');
+		btn.setAttribute('data-bs-slide-to', String(i));
+		btn.setAttribute('aria-label', 'Slide ' + (i + 1));
+		if (i === 0) {
+			btn.className = 'active';
+			btn.setAttribute('aria-current', 'true');
+		}
+		ind.appendChild(btn);
+
+		var item = document.createElement('div');
+		item.className = 'carousel-item' + (i === 0 ? ' active' : '');
+		var img = document.createElement('img');
+		img.src = url;
+		img.className = 'd-block w-100';
+		img.alt = '...';
+		item.appendChild(img);
+		inner.appendChild(item);
+	});
+
+	// เริ่ม Bootstrap Carousel ใหม่กับสไลด์ชุดใหม่ (ลบ instance เก่าทิ้งก่อน)
+	if (window.bootstrap && bootstrap.Carousel) {
+		var inst = bootstrap.Carousel.getInstance(el);
+		if (inst) inst.dispose();
+		bootstrap.Carousel.getOrCreateInstance(el, { interval: 5000, ride: 'carousel' });
+	}
 }
 
 function pad2(n) { return (n < 10 ? '0' : '') + n; }

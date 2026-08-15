@@ -5,5 +5,13 @@
   "defaultOpen": "06:00",
   "defaultClose": "14:00",
   "adminPinHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
-  "overrides": []
+  "overrides": [],
+  "banners": [
+    "https://promotions.co.th/wp-content/uploads/2020/02/Uf.jpg",
+    "https://obs.line-scdn.net/r/ect/ect/image_167548172840904131122dd9833t1119f970",
+    "https://obs.line-scdn.net/r/ect/ect/image_169050434116460858622dc3177t11ff3385",
+    "https://obs.line-scdn.net/r/ect/ect/image_1689768610134100582b57a9608t11f3f992",
+    "https://d.line-scdn.net/obs/r/ect/ect/image_165493380306192557119ca3404t0fe0701b/s640",
+    "https://d.line-scdn.net/obs/r/ect/ect/image_165733551754556205819d02228t100515cd/s640"
+  ]
 }

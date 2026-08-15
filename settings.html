@@ -9,20 +9,86 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+            background: linear-gradient(180deg, #f3edfb 0%, #f8fafc 100%);
             font-family: 'Prompt', sans-serif;
+            font-size: 15px;
         }
         .container-custom {
             max-width: 920px;
+            padding-left: 14px;
+            padding-right: 14px;
         }
+
+        /* ===== หัวเรื่องแบบ Gradient (สไตล์เดียวกับหน้า index) ===== */
+        .settings-hero {
+            position: relative;
+            border-radius: 18px;
+            padding: 1.7rem 1.1rem 1.4rem;
+            background: linear-gradient(135deg, #3b1a6b 0%, #7a2488 55%, #a1327a 100%);
+            color: #fff;
+            box-shadow: 0 14px 34px rgba(59, 26, 107, .3);
+            overflow: hidden;
+        }
+        .settings-hero::before,
+        .settings-hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .settings-hero::before {
+            width: 230px;
+            height: 230px;
+            top: -80px;
+            right: -60px;
+            background: radial-gradient(circle, rgba(255, 95, 162, .4), transparent 70%);
+        }
+        .settings-hero::after {
+            width: 160px;
+            height: 160px;
+            bottom: -70px;
+            left: -40px;
+            background: radial-gradient(circle, rgba(255, 215, 111, .35), transparent 70%);
+        }
+        .settings-hero h3 {
+            position: relative;
+            z-index: 1;
+            font-size: 1.45rem;
+            color: #fff;
+        }
+        .settings-hero p {
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, .85);
+            font-size: .92rem;
+        }
+        .settings-hero .badge {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, .18);
+            border: 1px solid rgba(255, 255, 255, .3);
+            color: #fff;
+            padding: .5em 1em;
+            font-size: .8rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+        .hero-meta {
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, .75);
+        }
+
+        /* ===== การ์ด ===== */
         .card {
             border: none;
-            border-radius: 14px;
-            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+            border-radius: 16px;
+            box-shadow: 0 2px 14px rgba(15, 23, 42, .08);
         }
         .card-header {
-            border-radius: 14px 14px 0 0 !important;
+            border-radius: 16px 16px 0 0 !important;
             font-weight: 600;
+            font-size: .95rem;
         }
         .step-badge {
             display: inline-flex;
@@ -42,7 +108,15 @@
             padding: 0.45em 0.9em;
         }
         .btn {
-            border-radius: 8px;
+            border-radius: 10px;
+            min-height: 40px;
+        }
+        .btn-sm {
+            min-height: 36px;
+        }
+        .form-control {
+            min-height: 44px;
+            border-radius: 10px;
         }
         .status-dot {
             width: 10px;
@@ -65,26 +139,70 @@
             display: none;
         }
 
-        /* ===== Mobile-first ===== */
-        body {
-            font-size: 15px;
+        /* ===== แถวจัดการรูปโปรโมชั่น (Banner) ===== */
+        .banner-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #faf7ff;
+            border: 1px solid #eadff7;
+            border-radius: 12px;
+            transition: border-color .2s ease;
         }
-        .container-custom {
-            padding-left: 14px;
-            padding-right: 14px;
+        .banner-row:hover {
+            border-color: #d3bcf0;
         }
-        .form-control {
-            min-height: 44px; /* พื้นที่แตะบนมือถือ */
+        .banner-thumb {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #efe6fb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn {
-            min-height: 40px;
+        .banner-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
-        .btn-sm {
-            min-height: 36px;
+        .banner-row .banner-url {
+            flex: 1;
+            min-width: 0;
+        }
+        .banner-del {
+            flex-shrink: 0;
         }
 
-        /* ตารางงวดพิเศษ: บนมือถือเปลี่ยนเป็นบัตรซ้อนกัน */
+        /* ===== Mobile-first ===== */
         @media (max-width: 575.98px) {
+            .settings-hero {
+                padding: 1.3rem .9rem 1.1rem;
+            }
+            .settings-hero h3 {
+                font-size: 1.25rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .card-header {
+                font-size: .92rem;
+            }
+            .banner-row {
+                gap: 6px;
+                padding: 6px;
+            }
+            .banner-thumb {
+                width: 44px;
+                height: 44px;
+            }
+
+            /* ตารางงวดพิเศษ: บนมือถือเปลี่ยนเป็นบัตรซ้อนกัน */
             .ov-table thead {
                 display: none;
             }
@@ -137,16 +255,6 @@
                 margin-left: 0 !important;
                 margin-top: 10px;
             }
-
-            h3 {
-                font-size: 1.35rem;
-            }
-            .card-header {
-                font-size: 0.92rem;
-            }
-            .card-body {
-                padding: 1rem;
-            }
         }
     </style>
 </head>
@@ -154,13 +262,13 @@
     <div class="container container-custom py-4">
 
         <!-- หัวเรื่อง -->
-        <div class="text-center mb-4">
-            <h3 class="font-weight-bold"><i class="fas fa-cogs text-primary mr-2"></i>หน้าตั้งค่าระบบทายหวย</h3>
-            <p class="text-muted mb-2">ตั้งเวลาเปิด-ปิดการทายหวยทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) ทุกปี</p>
+        <div class="settings-hero text-center mb-4">
+            <h3 class="font-weight-bold"><i class="fas fa-cogs mr-2"></i>หน้าตั้งค่าระบบทายหวย</h3>
+            <p class="mb-2">ตั้งเวลาเปิด-ปิดการทายหวยทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) และจัดการแถบรูปโปรโมชั่นหน้าแรก</p>
             <div>
                 <span class="badge badge-pill badge-info" id="configStatus">กำลังโหลดการตั้งค่าปัจจุบัน...</span>
             </div>
-            <div class="text-muted small mt-1" id="lastSaved"></div>
+            <div class="hero-meta small mt-1" id="lastSaved"></div>
         </div>
 
         <!-- หน้าล็อกอิน PIN -->
@@ -253,23 +361,33 @@
                 </div>
             </div>
 
-            <!-- 5. เปลี่ยนรหัสผ่าน -->
+            <!-- 5. แถบรูปโปรโมชั่น (Banner) หน้าแรก -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header"><span class="step-badge">4</span><i class="fas fa-key mr-2 text-danger"></i>เปลี่ยนรหัสผ่าน (PIN)</div>
+                <div class="card-header"><span class="step-badge">4</span><i class="fas fa-images mr-2 text-primary"></i>แถบรูปโปรโมชั่นหน้าแรก (Banner)</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">ใส่ URL รูปที่ต้องการแสดงบนหน้าแรก (index) — รูปแรกคือสไลด์แรก จำนวนกี่รูปก็ได้ ลบช่อง URL ทิ้งถ้าไม่อยากแสดงรูปนั้น (กด "บันทึกการตั้งค่า" ด้านล่างเพื่อให้มีผล)</p>
+                    <div id="bannerList"></div>
+                    <button id="addBannerBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-plus mr-1"></i>เพิ่มรูป</button>
+                </div>
+            </div>
+
+            <!-- 6. เปลี่ยนรหัสผ่าน -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><span class="step-badge">5</span><i class="fas fa-key mr-2 text-danger"></i>เปลี่ยนรหัสผ่าน (PIN)</div>
                 <div class="card-body">
                     <input type="password" id="newPin" class="form-control" placeholder="รหัสผ่านใหม่ (เว้นว่าง = ใช้รหัสเดิม)" maxlength="20" autocomplete="off">
                     <small class="text-muted">รหัสเริ่มต้นคือ <code>1234</code> — ควรเปลี่ยนหลังใช้งานครั้งแรก (จะมีผลหลังกดบันทึก)</small>
                 </div>
             </div>
 
-            <!-- 6. บันทึกการตั้งค่า -->
+            <!-- 7. บันทึกการตั้งค่า -->
             <div class="card shadow-sm mb-4 border-success">
-                <div class="card-header bg-success text-white"><span class="step-badge" style="background:rgba(255,255,255,.25);">5</span><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</div>
+                <div class="card-header bg-success text-white"><span class="step-badge" style="background:rgba(255,255,255,.25);">6</span><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</div>
                 <div class="card-body">
                     <button id="saveBtn" class="btn btn-success btn-lg btn-block"><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</button>
                     <div id="saveStatus" class="small font-weight-bold mt-3"></div>
                     <div class="alert alert-success mt-3 mb-2 small">
-                        กดปุ่มนี้ครั้งเดียวจบ — ระบบจะบันทึกการตั้งค่าทั้งหมด (เปิด/ปิด, เวลา, งวดพิเศษ, รหัสผ่าน) ลง Google Sheet ผู้เล่นทุกคนจะเห็นผลภายใน ~1 นาที
+                        กดปุ่มนี้ครั้งเดียวจบ — ระบบจะบันทึกการตั้งค่าทั้งหมด (เปิด/ปิด, เวลา, งวดพิเศษ, รูปแถบโปรโมชั่น, รหัสผ่าน) ลง Google Sheet ผู้เล่นทุกคนจะเห็นผลภายใน ~1 นาที
                     </div>
 
                     <!-- ขั้นสูง: ดู/คัดลอกไฟล์ config (สำรอง) -->
@@ -306,6 +424,11 @@
 
         function $(id) { return document.getElementById(id); }
 
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
         function setStatusBadge(text, cls) {
             var el = $('configStatus');
             el.textContent = text;
@@ -337,6 +460,28 @@
                 body: JSON.stringify(payload)
             });
             return await res.json();
+        }
+
+        // ---------- แถวจัดการรูป Banner ----------
+        function addBannerRow(url) {
+            var row = document.createElement('div');
+            row.className = 'banner-row';
+            row.innerHTML =
+                '<div class="banner-thumb"><img alt=""></div>' +
+                '<input type="url" class="form-control form-control-sm banner-url" placeholder="https://... URL รูปที่ ' + ($('bannerList').children.length + 1) + '" value="' + escapeHtml(url || '') + '">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm banner-del" title="ลบรูปนี้"><i class="fas fa-trash"></i></button>';
+            $('bannerList').appendChild(row);
+
+            var input = row.querySelector('.banner-url');
+            var thumbImg = row.querySelector('.banner-thumb img');
+            function updThumb() {
+                var v = input.value.trim();
+                thumbImg.style.display = v ? '' : 'none';
+                if (v) thumbImg.src = v;
+            }
+            updThumb();
+            input.addEventListener('input', function () { updThumb(); refreshJson(); });
+            row.querySelector('.banner-del').addEventListener('click', function () { row.remove(); refreshJson(); });
         }
 
         // ---------- โหลด config ปัจจุบัน ----------
@@ -385,6 +530,12 @@
             var body = $('ovBody');
             body.innerHTML = '';
             ((current && current.overrides) || []).forEach(function (o) { addRow(o); });
+
+            // แถวรูปโปรโมชั่น
+            $('bannerList').innerHTML = '';
+            var banners = (current && Array.isArray(current.banners)) ? current.banners : [];
+            if (!banners.length) banners = [''];
+            banners.forEach(function (u) { addBannerRow(u || ''); });
 
             if (current && current.updatedAt) {
                 $('lastSaved').textContent = 'บันทึกล่าสุด: ' + formatDate(current.updatedAt);
@@ -443,6 +594,11 @@
                     close: tr.querySelector('.ov-close').value || $('defClose').value
                 });
             });
+            var banners = [];
+            document.querySelectorAll('.banner-url').forEach(function (inp) {
+                var v = inp.value.trim();
+                if (v) banners.push(v);
+            });
             var pinHash = existingPinHash || DEFAULT_HASH;
             var np = $('newPin').value.trim();
             if (np) pinHash = await sha256Hex(np);
@@ -453,7 +609,8 @@
                 defaultOpen: $('defOpen').value || '06:00',
                 defaultClose: $('defClose').value || '14:00',
                 adminPinHash: pinHash,
-                overrides: rows
+                overrides: rows,
+                banners: banners
             };
         }
 
@@ -503,7 +660,8 @@
                 manualOverride: cfg.manualOverride,
                 defaultOpen: cfg.defaultOpen,
                 defaultClose: cfg.defaultClose,
-                overrides: cfg.overrides
+                overrides: cfg.overrides,
+                banners: cfg.banners
             };
             var np = $('newPin').value.trim();
             if (np) payload.newPin = np;
@@ -573,6 +731,9 @@
             });
             $('ovBody').addEventListener('input', refreshJson);
             $('ovBody').addEventListener('change', refreshJson);
+
+            // เพิ่ม/ลบแถวรูปโปรโมชั่น
+            $('addBannerBtn').addEventListener('click', function () { addBannerRow(''); refreshJson(); });
 
             // ค่าเริ่มต้น + บังคับเปิด/ปิด + PIN ใหม่ → สร้าง JSON อัตโนมัติ
             $('defOpen').addEventListener('input', refreshJson);
