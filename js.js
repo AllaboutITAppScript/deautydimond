@@ -12,6 +12,7 @@
 var config = null;       // null = ยังโหลด config ไม่เสร็จ
 var configLoaded = false;
 var renderedBannersKey = null;   // จำแถวรูปที่ render ไปแล้ว เพื่อไม่ต้องสร้างซ้ำ
+var popupShown = false;          // แสดง popup รูปโปรโมชั่นแล้ว (ครั้งเดียวต่อการเปิดหน้า)
 
 async function loadConfig() {
 	try {
@@ -102,6 +103,57 @@ function renderBanners(banners) {
 		if (inst) inst.dispose();
 		bootstrap.Carousel.getOrCreateInstance(el, { interval: 5000, ride: 'carousel' });
 	}
+}
+
+// ---- สร้างแถบรูปใน popup (modal) จากค่า banners ใน config ----
+function buildPopupCarousel(banners) {
+	var el = document.getElementById('bannerPopupCarousel');
+	if (!el) return false;
+	var inner = el.querySelector('.carousel-inner');
+	var ind = el.querySelector('.carousel-indicators');
+	if (!inner || !ind) return false;
+	ind.innerHTML = '';
+	inner.innerHTML = '';
+	banners.forEach(function (url, i) {
+		var btn = document.createElement('button');
+		btn.type = 'button';
+		btn.setAttribute('data-bs-target', '#bannerPopupCarousel');
+		btn.setAttribute('data-bs-slide-to', String(i));
+		btn.setAttribute('aria-label', 'Slide ' + (i + 1));
+		if (i === 0) {
+			btn.className = 'active';
+			btn.setAttribute('aria-current', 'true');
+		}
+		ind.appendChild(btn);
+
+		var item = document.createElement('div');
+		item.className = 'carousel-item' + (i === 0 ? ' active' : '');
+		var img = document.createElement('img');
+		img.src = url;
+		img.className = 'd-block w-100';
+		img.alt = '...';
+		item.appendChild(img);
+		inner.appendChild(item);
+	});
+	if (window.bootstrap && bootstrap.Carousel) {
+		var inst = bootstrap.Carousel.getInstance(el);
+		if (inst) inst.dispose();
+		bootstrap.Carousel.getOrCreateInstance(el, { interval: 4000, ride: 'carousel' });
+	}
+	return true;
+}
+
+// ---- แสดง popup รูปโปรโมชั่นก่อนเริ่มเล่นกิจกรรม ----
+function showBannerPopup() {
+	var banners = (config && Array.isArray(config.banners)) ? config.banners : [];
+	if (!banners.length) return false;
+	var modalEl = document.getElementById('bannerPopup');
+	if (!modalEl) return false;
+	if (!buildPopupCarousel(banners)) return false;
+	if (window.bootstrap && bootstrap.Modal) {
+		bootstrap.Modal.getOrCreateInstance(modalEl).show();
+	}
+	return true;
 }
 
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -250,6 +302,10 @@ function updateTimer() {
 			st.forced ? "<h2>เปิดระบบการทายหวยแล้ว</h2>" : "<h2>จะปิดให้ทายหวย" + closeLabel + "</h2>";
 		setDisplay("timer", "");
 		setDisplay("cover", "block");
+		// แสดง popup รูปโปรโมชั่นก่อนเริ่มเล่น (ครั้งเดียวต่อการเปิดหน้า)
+		if (!popupShown) {
+			popupShown = showBannerPopup();
+		}
 	} else {
 		document.getElementById("msgStatus").innerHTML =
 			'<div class="card"><div class="card-body">' +

@@ -631,6 +631,125 @@ img {
   text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
 }
 
+/* ---------- Popup รูปโปรโมชั่นก่อนเล่นกิจกรรม ---------- */
+.banner-popup .modal-content {
+  border: none;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+}
+
+.banner-popup-header {
+  padding: .85rem 1rem;
+  border-bottom: none;
+  background: linear-gradient(135deg, #3b1a6b 0%, #7a2488 55%, #a1327a 100%);
+  color: #fff;
+  text-align: center;
+  justify-content: center;
+}
+
+.banner-popup-header .modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.banner-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .2);
+  border: 1px solid rgba(255, 255, 255, .45);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  text-shadow: none;
+}
+
+.banner-popup-close:hover {
+  background: rgba(255, 255, 255, .35);
+  color: #fff;
+  opacity: 1;
+}
+
+.banner-popup .carousel-inner img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.banner-popup .carousel-indicators {
+  margin-bottom: .6rem;
+}
+
+.banner-popup .carousel-indicators button {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(28, 11, 58, .4);
+  transition: all .25s ease;
+}
+
+.banner-popup .carousel-indicators button.active {
+  width: 24px;
+  background-color: #3b1a6b;
+}
+
+.banner-popup .carousel-control-prev,
+.banner-popup .carousel-control-next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(28, 11, 58, .35);
+  border: 1px solid rgba(255, 255, 255, .3);
+  opacity: 1;
+}
+
+.banner-popup .carousel-control-prev { left: 8px; }
+.banner-popup .carousel-control-next { right: 8px; }
+
+.banner-popup .carousel-control-prev-icon,
+.banner-popup .carousel-control-next-icon {
+  opacity: 1;
+}
+
+.banner-popup-footer {
+  padding: .9rem 1rem 1.1rem;
+  border-top: 1px dashed #ead6f7;
+  background: linear-gradient(135deg, #fdf1f8 0%, #f5ecff 100%);
+}
+
+.banner-popup-footer .banner-popup-btn {
+  width: 100%;
+  border: none !important;
+  border-radius: 999px !important;
+  min-height: 48px;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #ff4fa3 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 8px 20px rgba(255, 79, 163, .35);
+}
+
+.banner-popup-footer .banner-popup-btn:hover {
+  filter: brightness(1.06);
+}
+
+@media (max-width: 575.98px) {
+  .banner-popup .carousel-inner img {
+    height: 200px;
+  }
+}
+
 /* ---------- Responsive (Mobile-first) ---------- */
 @media (max-width: 575.98px) {
   .hero {

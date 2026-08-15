@@ -531,9 +531,11 @@
             body.innerHTML = '';
             ((current && current.overrides) || []).forEach(function (o) { addRow(o); });
 
-            // แถวรูปโปรโมชั่น
+            // แถวรูปโปรโมชั่น — ถ้า GAS ยังไม่มี banners (ยังไม่ได้บันทึก) ให้ดึงจาก config.json แทน
+            // เพื่อไม่ให้รูปเดิมหายไปตอนเปิดหน้า settings แล้วกดบันทึกทับ
             $('bannerList').innerHTML = '';
             var banners = (current && Array.isArray(current.banners)) ? current.banners : [];
+            if (!banners.length && local && Array.isArray(local.banners)) banners = local.banners;
             if (!banners.length) banners = [''];
             banners.forEach(function (u) { addBannerRow(u || ''); });
 

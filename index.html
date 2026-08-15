@@ -187,6 +187,37 @@
         </div>
     </div>
 
+    <!-- Popup รูปโปรโมชั่นก่อนเริ่มเล่นกิจกรรม (แสดงเมื่อเปิดให้ทาย และมีรูปแบนเนอร์) -->
+    <div class="modal fade banner-popup" id="bannerPopup" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content banner-popup-content">
+                <div class="modal-header banner-popup-header">
+                    <h5 class="modal-title">🎁 โปรโมชั่นพิเศษจากร้าน</h5>
+                </div>
+                <button type="button" class="close banner-popup-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div class="modal-body p-0">
+                    <div id="bannerPopupCarousel" class="carousel slide">
+                        <div class="carousel-indicators"></div>
+                        <div class="carousel-inner"></div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#bannerPopupCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#bannerPopupCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer banner-popup-footer">
+                    <button type="button" class="btn btn-primary btn-block banner-popup-btn" data-bs-dismiss="modal">เริ่มเล่นเลย 🎯</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="loading-overlay" class="fixed-top vh-100 vw-100 d-none justify-content-center align-items-center" style="background: rgba(128, 128, 128, 0.5);">
         <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYXJka28zMXRvcWw2Ym5vdTZieDRuM2dsNzljeWNqbXppd2VhdnoyZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/iGoyzwQnDS6lzNhdZK/giphy.webp" alt="Loading...">
         <p>กำลังส่งข้อมูล...</p>
@@ -310,7 +341,7 @@
             liff.closeWindow();
         }
     </script>
-    <script src="js.js?v=6" theme="blue" defer></script>
+    <script src="js.js?v=7" theme="blue" defer></script>
 </body>
 
 </html>
