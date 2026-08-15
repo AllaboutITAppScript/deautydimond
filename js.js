@@ -296,12 +296,14 @@ function updateTimer() {
 		setDisplay("timer", "");
 		setDisplay("btnResult", "none");
 		setDisplay("cover", "none");
+		setDisplay("loginPage", "none");   // ยังไม่เปิด → ซ่อนฟอร์มกรอกเลข
 	} else if (status === 1) {
 		var closeLabel = (!st.forced && st.closeTime) ? ' เวลา ' + st.closeTime + ' น.' : '';
 		document.getElementById("msgStatus").innerHTML =
 			st.forced ? "<h2>เปิดระบบการทายหวยแล้ว</h2>" : "<h2>จะปิดให้ทายหวย" + closeLabel + "</h2>";
 		setDisplay("timer", "");
 		setDisplay("cover", "block");
+		setDisplay("loginPage", "block");   // เปิดแล้ว → แสดงฟอร์มกรอกเลข
 		// แสดง popup รูปโปรโมชั่นก่อนเริ่มเล่น (ครั้งเดียวต่อการเปิดหน้า)
 		if (!popupShown) {
 			popupShown = showBannerPopup();
@@ -315,6 +317,7 @@ function updateTimer() {
 			'</div></div>';
 		setDisplay("timer", "none");
 		setDisplay("cover", "none");
+		setDisplay("loginPage", "none");   // ปิดแล้ว → ซ่อนฟอร์มกรอกเลข
 	}
 }
 
