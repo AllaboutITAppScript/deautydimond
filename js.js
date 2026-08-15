@@ -52,14 +52,22 @@ async function loadConfig() {
 }
 
 // สร้างแถบรูปโปรโมชั่น (carousel) จากค่า banners ใน config — รูปแรกคือสไลด์แรก
-// ถ้ายังไม่มีค่า banners (หรือโหลด config ไม่สำเร็จ) จะใช้แถบรูปเดิมที่อยู่ใน index.html
+// ถ้าไม่มีรูปแบนเนอร์ (ยังไม่ได้ตั้งค่า หรือลบรูปทิ้งทั้งหมด) จะซ่อนแถบรูปไว้
 function renderBanners(banners) {
-	if (!banners || !Array.isArray(banners) || !banners.length) return;
 	var el = document.getElementById('carouselExampleCaptions');
 	if (!el) return;
+	var coverCard = el.closest ? el.closest('.cover-card') : null;
 	var inner = el.querySelector('.carousel-inner');
 	var ind = el.querySelector('.carousel-indicators');
 	if (!inner || !ind) return;
+
+	// ไม่มีรูป → ซ่อนแถบรูป (การ์ดกติกายังแสดงตามปกติ)
+	if (!banners || !Array.isArray(banners) || !banners.length) {
+		if (coverCard) coverCard.style.display = 'none';
+		return;
+	}
+	if (coverCard) coverCard.style.display = '';
+
 	var key = banners.join('|');
 	if (key === renderedBannersKey) return;   // รูปชุดเดิม → ไม่ต้องสร้างใหม่
 	renderedBannersKey = key;
