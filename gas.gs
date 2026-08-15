@@ -50,7 +50,8 @@ function doPost(e) {
         manualOverride: body.manualOverride || null,
         defaultOpen: String(body.defaultOpen || '06:00'),
         defaultClose: String(body.defaultClose || '14:00'),
-        overrides: Array.isArray(body.overrides) ? body.overrides : []
+        overrides: Array.isArray(body.overrides) ? body.overrides : [],
+        updatedAt: new Date().toISOString()
       };
       // เปลี่ยน PIN ถ้ากรอก PIN ใหม่ (อย่างน้อย 4 ตัว)
       var newPin = String(body.newPin || '').trim();
@@ -174,7 +175,7 @@ function getConfigPayload() {
     try { cfg = JSON.parse(String(map.config)); } catch (e) {}
   }
   if (!cfg) {
-    cfg = { manualOverride: null, defaultOpen: '06:00', defaultClose: '14:00', overrides: [] };
+    cfg = { manualOverride: null, defaultOpen: '06:00', defaultClose: '14:00', overrides: [], updatedAt: null };
   }
   // ส่ง SHA-256 ของ PIN ให้หน้าเว็บใช้ตรวจก่อนเปิดหน้าตั้งค่า
   cfg.adminPinHash = sha256Hex(getPin());

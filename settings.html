@@ -6,38 +6,82 @@
     <title>ตั้งค่าระบบทายหวย</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: #f4f6fb;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+            font-family: 'Prompt', sans-serif;
+        }
+        .container-custom {
+            max-width: 920px;
         }
         .card {
             border: none;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
         }
         .card-header {
-            font-weight: 700;
+            border-radius: 14px 14px 0 0 !important;
+            font-weight: 600;
         }
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #4361ee;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .badge-pill {
+            font-size: 0.85rem;
+            padding: 0.45em 0.9em;
+        }
+        .btn {
+            border-radius: 8px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-dot.ok { background: #28a745; }
+        .status-dot.bad { background: #dc3545; }
+        .status-dot.warn { background: #ffc107; }
         .font-monospace {
             font-family: Consolas, Menlo, monospace;
             font-size: 12px;
         }
         .ov-date {
-            min-width: 130px;
+            min-width: 135px;
+        }
+        #saveStatus {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container py-4" style="max-width: 880px;">
+    <div class="container container-custom py-4">
 
         <!-- หัวเรื่อง -->
         <div class="text-center mb-4">
-            <h3><i class="fas fa-cogs text-primary mr-2"></i>หน้าตั้งค่าระบบทายหวย</h3>
-            <p class="text-muted mb-1">ตั้งเวลาเปิด-ปิดการทายหวยทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) ทุกปี</p>
-            <span class="badge badge-info" id="configStatus">กำลังโหลดการตั้งค่าปัจจุบัน...</span>
+            <h3 class="font-weight-bold"><i class="fas fa-cogs text-primary mr-2"></i>หน้าตั้งค่าระบบทายหวย</h3>
+            <p class="text-muted mb-2">ตั้งเวลาเปิด-ปิดการทายหวยทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) ทุกปี</p>
+            <div>
+                <span class="badge badge-pill badge-info" id="configStatus">กำลังโหลดการตั้งค่าปัจจุบัน...</span>
+            </div>
+            <div class="text-muted small mt-1" id="lastSaved"></div>
         </div>
 
         <!-- หน้าล็อกอิน PIN -->
-        <div id="pinGate" class="card shadow-sm mx-auto" style="max-width: 420px;">
-            <div class="card-body">
+        <div id="pinGate" class="card shadow-sm mx-auto" style="max-width: 430px;">
+            <div class="card-body p-4">
                 <h5 class="card-title"><i class="fas fa-lock text-warning mr-1"></i>กรอกรหัสผ่านผู้ดูแล</h5>
                 <input type="password" id="pinInput" class="form-control" placeholder="รหัสผ่าน (PIN)" maxlength="20" autocomplete="off">
                 <div id="pinError" class="text-danger mt-2" style="display:none;"><i class="fas fa-times-circle mr-1"></i>รหัสผ่านไม่ถูกต้อง</div>
@@ -49,9 +93,26 @@
         <!-- หน้าตั้งค่า -->
         <div id="mainPanel" style="display:none;">
 
-            <!-- 1. ควบคุมด่วน -->
+            <!-- 1. การเชื่อมต่อ Google Apps Script -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark"><i class="fas fa-power-off mr-2"></i>ควบคุมด่วน (ปิด/เปิดทั้งระบบ)</div>
+                <div class="card-header"><i class="fas fa-plug mr-2 text-success"></i>การเชื่อมต่อ Google Apps Script (Google Sheet)</div>
+                <div class="card-body">
+                    <div class="form-group mb-2">
+                        <label class="font-weight-bold">URL ของ Web App (gasUrl)</label>
+                        <input type="text" id="gasUrlInput" class="form-control font-monospace" readonly
+                               placeholder="https://script.google.com/macros/s/.../exec">
+                        <small class="text-muted">URL นี้กำหนดในไฟล์ <code>config.json</code> — แก้ที่ GitHub เท่านั้น</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button id="testConnBtn" class="btn btn-outline-primary btn-sm"><i class="fas fa-sync-alt mr-1"></i>ทดสอบการเชื่อมต่อ</button>
+                        <div id="connStatus" class="ml-3 small"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ควบคุมด่วน -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark"><span class="step-badge">1</span><i class="fas fa-power-off mr-1"></i>ควบคุมด่วน (ปิด/เปิดทั้งระบบ)</div>
                 <div class="card-body">
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="override" id="ovAuto" value="auto" checked>
@@ -74,9 +135,9 @@
                 </div>
             </div>
 
-            <!-- 2. ค่าเริ่มต้นทุกงวด -->
+            <!-- 3. เวลาเปิด-ปิดค่าเริ่มต้น -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header"><i class="fas fa-clock mr-2 text-primary"></i>เวลาเปิด-ปิดค่าเริ่มต้นของทุกงวด</div>
+                <div class="card-header"><span class="step-badge">2</span><i class="fas fa-clock mr-2 text-primary"></i>เวลาเปิด-ปิดค่าเริ่มต้นของทุกงวด</div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
@@ -92,16 +153,16 @@
                 </div>
             </div>
 
-            <!-- 3. งวดที่กำหนดพิเศษ -->
+            <!-- 4. งวดที่กำหนดพิเศษ -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header"><i class="fas fa-exclamation-circle mr-2 text-warning"></i>งวดที่กำหนดพิเศษ (ยกเว้น)</div>
+                <div class="card-header"><span class="step-badge">3</span><i class="fas fa-exclamation-circle mr-2 text-warning"></i>งวดที่กำหนดพิเศษ (ยกเว้น)</div>
                 <div class="card-body">
                     <p class="text-muted small mb-2">ใช้เฉพาะงวดที่ต้องการ <b>ปิดทั้งงวด</b> หรือ <b>ปรับเวลาต่างจากค่าเริ่มต้น</b> เช่น งวดที่วันออกจริงไม่ตรงกับวันที่ 1/16 หรือต้องการเลื่อนเวลา ระบบปกติไม่ต้องใส่แถวอะไรเลย</p>
                     <table class="table table-sm table-bordered mb-2">
                         <thead class="thead-light">
                             <tr>
-                                <th style="width: 35%;">วันที่ (YYYY-MM-DD)</th>
-                                <th class="text-center" style="width: 15%;">เปิดงวดนี้</th>
+                                <th style="width: 32%;">วันที่ (YYYY-MM-DD)</th>
+                                <th class="text-center" style="width: 14%;">เปิดงวดนี้</th>
                                 <th style="width: 18%;">เวลาเปิด</th>
                                 <th style="width: 18%;">เวลาปิด</th>
                                 <th style="width: 14%;"></th>
@@ -113,23 +174,23 @@
                 </div>
             </div>
 
-            <!-- 4. เปลี่ยนรหัสผ่าน -->
+            <!-- 5. เปลี่ยนรหัสผ่าน -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header"><i class="fas fa-key mr-2 text-danger"></i>เปลี่ยนรหัสผ่าน (PIN)</div>
+                <div class="card-header"><span class="step-badge">4</span><i class="fas fa-key mr-2 text-danger"></i>เปลี่ยนรหัสผ่าน (PIN)</div>
                 <div class="card-body">
                     <input type="password" id="newPin" class="form-control" placeholder="รหัสผ่านใหม่ (เว้นว่าง = ใช้รหัสเดิม)" maxlength="20" autocomplete="off">
                     <small class="text-muted">รหัสเริ่มต้นคือ <code>1234</code> — ควรเปลี่ยนหลังใช้งานครั้งแรก (จะมีผลหลังกดบันทึก)</small>
                 </div>
             </div>
 
-            <!-- 5. บันทึกการตั้งค่า -->
+            <!-- 6. บันทึกการตั้งค่า -->
             <div class="card shadow-sm mb-4 border-success">
-                <div class="card-header bg-success text-white"><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</div>
+                <div class="card-header bg-success text-white"><span class="step-badge" style="background:rgba(255,255,255,.25);">5</span><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</div>
                 <div class="card-body">
                     <button id="saveBtn" class="btn btn-success btn-lg btn-block"><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</button>
-                    <div id="saveStatus" class="mt-3 small font-weight-bold"></div>
+                    <div id="saveStatus" class="small font-weight-bold mt-3"></div>
                     <div class="alert alert-success mt-3 mb-2 small">
-                        กดปุ่มนี้ครั้งเดียวจบ — ระบบจะบันทึกการตั้งค่าทั้งหมด (เปิด/ปิด, เวลา, งวดพิเศษ, รหัสผ่าน) ผู้เล่นทุกคนจะเห็นผลภายใน ~1 นาที
+                        กดปุ่มนี้ครั้งเดียวจบ — ระบบจะบันทึกการตั้งค่าทั้งหมด (เปิด/ปิด, เวลา, งวดพิเศษ, รหัสผ่าน) ลง Google Sheet ผู้เล่นทุกคนจะเห็นผลภายใน ~1 นาที
                     </div>
 
                     <!-- ขั้นสูง: ดู/คัดลอกไฟล์ config (สำรอง) -->
@@ -154,7 +215,7 @@
 
     <script>
         // ============================================================
-        // หน้าตั้งค่าระบบทายหวย
+        // หน้าตั้งค่าระบบทายหวย — บันทึกลง Google Apps Script (Google Sheet)
         // ============================================================
 
         // ค่า hash ของรหัสเริ่มต้น "1234"
@@ -164,15 +225,39 @@
         var gasUrl = '';
         var jsonTimer = null;
 
+        function $(id) { return document.getElementById(id); }
+
         function setStatusBadge(text, cls) {
-            var el = document.getElementById('configStatus');
+            var el = $('configStatus');
             el.textContent = text;
-            el.className = 'badge ' + (cls || 'badge-info');
+            el.className = 'badge badge-pill ' + (cls || 'badge-info');
         }
 
         async function sha256Hex(str) {
             var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
             return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }
+
+        function formatDate(iso) {
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            return d.toLocaleString('th-TH', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ---------- เรียกใช้งาน GAS ----------
+        async function fetchGas(action, payload) {
+            if (action === 'getConfig') {
+                var res = await fetch(gasUrl + '?action=getConfig', { cache: 'no-store' });
+                return await res.json();
+            }
+            var res = await fetch(gasUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            return await res.json();
         }
 
         // ---------- โหลด config ปัจจุบัน ----------
@@ -184,37 +269,50 @@
             } catch (e) {}
 
             gasUrl = (local && local.gasUrl) || '';
+            $('gasUrlInput').value = gasUrl || '(ยังไม่ตั้งค่า — ดูวิธีในไฟล์ gas.gs)';
 
             var current = null;
+            var connected = false;
             if (gasUrl) {
                 try {
-                    var gasRes = await fetch(gasUrl + '?action=getConfig', { cache: 'no-store' });
-                    if (gasRes.ok) current = await gasRes.json();
+                    var gas = await fetchGas('getConfig');
+                    if (gas && typeof gas === 'object' && gas.defaultOpen) {
+                        current = gas;
+                        connected = true;
+                        setStatusBadge('เชื่อมต่อ Google Apps Script สำเร็จ', 'badge-success');
+                        $('connStatus').innerHTML = '<span class="text-success"><span class="status-dot ok"></span>เชื่อมต่อแล้ว — ดึงการตั้งค่าจาก Google Sheet</span>';
+                    }
                 } catch (e) {}
-                if (current && current.defaultOpen) {
-                    setStatusBadge('เชื่อมต่อ Google Apps Script แล้ว', 'badge-success');
-                } else {
-                    setStatusBadge('โหลดจาก Google Apps Script ไม่ได้ — ตรวจ URL ในช่อง gasUrl ของ config.json', 'badge-danger');
+                if (!connected) {
+                    setStatusBadge('เชื่อมต่อ GAS ไม่ได้ — ใช้ค่าจาก config.json (สำรอง)', 'badge-danger');
+                    $('connStatus').innerHTML = '<span class="text-danger"><span class="status-dot bad"></span>เชื่อมต่อไม่ได้ — ตรวจ gasUrl และสถานะการ Deploy</span>';
                     current = local;
                 }
             } else {
                 current = local;
-                setStatusBadge('ยังไม่ได้ตั้งค่า GAS — ใช้ปุ่ม "ขั้นสูง" คัดลอก-วางลง GitHub แทน', 'badge-warning');
+                setStatusBadge('ยังไม่ได้ตั้งค่า GAS — ใช้วิธีคัดลอก-วาง (ขั้นสูง)', 'badge-warning');
+                $('connStatus').innerHTML = '<span class="text-warning"><span class="status-dot warn"></span>ยังไม่ได้ตั้งค่า gasUrl ใน config.json</span>';
             }
 
             existingPinHash = (current && current.adminPinHash) || DEFAULT_HASH;
 
-            document.getElementById('defOpen').value = (current && current.defaultOpen) || '06:00';
-            document.getElementById('defClose').value = (current && current.defaultClose) || '14:00';
+            $('defOpen').value = (current && current.defaultOpen) || '06:00';
+            $('defClose').value = (current && current.defaultClose) || '14:00';
 
             var ov = current && current.manualOverride;
-            if (ov === 'open') document.getElementById('ovOpen').checked = true;
-            else if (ov === 'close') document.getElementById('ovClose').checked = true;
-            else document.getElementById('ovAuto').checked = true;
+            if (ov === 'open') $('ovOpen').checked = true;
+            else if (ov === 'close') $('ovClose').checked = true;
+            else $('ovAuto').checked = true;
 
-            var body = document.getElementById('ovBody');
+            var body = $('ovBody');
             body.innerHTML = '';
             ((current && current.overrides) || []).forEach(function (o) { addRow(o); });
+
+            if (current && current.updatedAt) {
+                $('lastSaved').textContent = 'บันทึกล่าสุด: ' + formatDate(current.updatedAt);
+            } else {
+                $('lastSaved').textContent = 'ยังไม่เคยบันทึกการตั้งค่า';
+            }
 
             refreshJson();
         }
@@ -228,7 +326,30 @@
                 '<td><input type="time" class="form-control form-control-sm ov-open" value="' + (ov && ov.open ? ov.open : '06:00') + '"></td>' +
                 '<td><input type="time" class="form-control form-control-sm ov-close" value="' + (ov && ov.close ? ov.close : '14:00') + '"></td>' +
                 '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm ov-del"><i class="fas fa-trash"></i></button></td>';
-            document.getElementById('ovBody').appendChild(tr);
+            $('ovBody').appendChild(tr);
+        }
+
+        // ---------- ตรวจสอบความถูกต้องของข้อมูล ----------
+        function validateRows() {
+            var problems = [];
+            document.querySelectorAll('#ovBody tr').forEach(function (tr) {
+                var date = tr.querySelector('.ov-date').value.trim();
+                if (!date) return;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                    problems.push('รูปแบบวันที่ "' + date + '" ไม่ถูกต้อง ต้องเป็น YYYY-MM-DD');
+                    return;
+                }
+                var p = date.split('-');
+                var d = new Date(+p[0], +p[1] - 1, +p[2]);
+                if (d.getFullYear() !== +p[0] || d.getMonth() !== +p[1] - 1 || d.getDate() !== +p[2]) {
+                    problems.push('วันที่ "' + date + '" ไม่มีอยู่จริง');
+                    return;
+                }
+                if (d.getDate() !== 1 && d.getDate() !== 16) {
+                    problems.push('วันที่ "' + date + '" ไม่ใช่วันออกหวย (ควรเป็นวันที่ 1 หรือ 16 ของเดือน)');
+                }
+            });
+            return problems;
         }
 
         // ---------- สร้างข้อมูล config จากหน้าเว็บ ----------
@@ -240,19 +361,19 @@
                 rows.push({
                     date: date,
                     enabled: tr.querySelector('.ov-enabled').checked,
-                    open: tr.querySelector('.ov-open').value || document.getElementById('defOpen').value,
-                    close: tr.querySelector('.ov-close').value || document.getElementById('defClose').value
+                    open: tr.querySelector('.ov-open').value || $('defOpen').value,
+                    close: tr.querySelector('.ov-close').value || $('defClose').value
                 });
             });
             var pinHash = existingPinHash || DEFAULT_HASH;
-            var np = document.getElementById('newPin').value.trim();
+            var np = $('newPin').value.trim();
             if (np) pinHash = await sha256Hex(np);
             var ovVal = document.querySelector('input[name="override"]:checked').value;
             return {
                 schemaVersion: 2,
                 manualOverride: ovVal === 'auto' ? null : ovVal,
-                defaultOpen: document.getElementById('defOpen').value || '06:00',
-                defaultClose: document.getElementById('defClose').value || '14:00',
+                defaultOpen: $('defOpen').value || '06:00',
+                defaultClose: $('defClose').value || '14:00',
                 adminPinHash: pinHash,
                 overrides: rows
             };
@@ -263,19 +384,38 @@
             jsonTimer = setTimeout(async function () {
                 try {
                     var cfg = await buildConfig();
-                    document.getElementById('jsonOut').value = JSON.stringify(cfg, null, 2);
+                    $('jsonOut').value = JSON.stringify(cfg, null, 2);
                 } catch (e) {
                     console.error('สร้าง JSON ไม่สำเร็จ', e);
                 }
             }, 250);
         }
 
-        // ---------- บันทึกการตั้งค่า (ไปยัง Google Apps Script) ----------
+        // ---------- บันทึกการตั้งค่า (ไปยัง Google Apps Script → Google Sheet) ----------
+        function showSaveResult(type, msg) {
+            var el = $('saveStatus');
+            el.style.display = 'block';
+            el.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' small font-weight-bold mt-3';
+            el.innerHTML = (type === 'success' ? '✅ ' : '❌ ') + msg;
+        }
+
+        function setSaving(on) {
+            var btn = $('saveBtn');
+            btn.disabled = on;
+            btn.innerHTML = on
+                ? '<span class="spinner-border spinner-border-sm mr-2"></span>กำลังบันทึก...'
+                : '<i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า';
+        }
+
         async function saveSettings() {
-            var statusEl = document.getElementById('saveStatus');
             if (!gasUrl) {
-                statusEl.innerHTML = '<span class="text-danger">⚠️ ยังไม่ได้ตั้งค่า Google Apps Script — ใช้วิธีคัดลอก-วางด้านล่าง (ขั้นสูง) แทน หรือทำตามขั้นตอนในไฟล์ gas.gs</span>';
-                document.getElementById('advSection').style.display = 'block';
+                showSaveResult('danger', 'ยังไม่ได้ตั้งค่า Google Apps Script — ใช้วิธีคัดลอก-วางด้านล่าง (ขั้นสูง) แทน หรือทำตามขั้นตอนในไฟล์ gas.gs');
+                $('advSection').style.display = 'block';
+                return;
+            }
+            var problems = validateRows();
+            if (problems.length) {
+                showSaveResult('danger', 'กรุณาแก้ไขก่อนบันทึก:<br>• ' + problems.join('<br>• '));
                 return;
             }
             var cfg = await buildConfig();
@@ -287,28 +427,48 @@
                 defaultClose: cfg.defaultClose,
                 overrides: cfg.overrides
             };
-            var np = document.getElementById('newPin').value.trim();
+            var np = $('newPin').value.trim();
             if (np) payload.newPin = np;
 
-            statusEl.innerHTML = '<span class="text-primary">กำลังบันทึก...</span>';
+            setSaving(true);
             try {
-                var res = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-                var data = await res.json();
+                var data = await fetchGas('saveConfig', payload);
                 if (data.success) {
                     if (data.adminPinHash) existingPinHash = data.adminPinHash;
                     if (np) enteredPin = np;
-                    document.getElementById('newPin').value = '';
-                    statusEl.innerHTML = '<span class="text-success">✅ บันทึกสำเร็จ! ผู้เล่นทุกคนจะเห็นการตั้งค่าใหม่ภายใน ~1 นาที</span>';
+                    $('newPin').value = '';
+                    showSaveResult('success', 'บันทึกสำเร็จ! การตั้งค่าถูกบันทึกลง Google Sheet แล้ว — ผู้เล่นทุกคนจะเห็นผลภายใน ~1 นาที');
+                    if (data.updatedAt) $('lastSaved').textContent = 'บันทึกล่าสุด: ' + formatDate(data.updatedAt);
                     setStatusBadge('บันทึกการตั้งค่าแล้ว', 'badge-success');
                 } else {
-                    statusEl.innerHTML = '<span class="text-danger">❌ ' + (data.message || 'บันทึกไม่สำเร็จ') + '</span>';
+                    showSaveResult('danger', data.message || 'บันทึกไม่สำเร็จ (รหัสผ่านไม่ถูกต้องหรือ GAS มีปัญหา)');
                 }
             } catch (e) {
-                statusEl.innerHTML = '<span class="text-danger">❌ เกิดข้อผิดพลาด: ' + e.message + '</span>';
+                showSaveResult('danger', 'เกิดข้อผิดพลาด: ' + e.message);
+            } finally {
+                setSaving(false);
+            }
+        }
+
+        // ---------- ทดสอบการเชื่อมต่อ ----------
+        async function testConnection() {
+            var el = $('connStatus');
+            if (!gasUrl) {
+                el.innerHTML = '<span class="text-warning"><span class="status-dot warn"></span>ยังไม่ได้ตั้งค่า gasUrl ใน config.json</span>';
+                return;
+            }
+            el.innerHTML = 'กำลังทดสอบ...';
+            try {
+                var data = await fetchGas('getConfig');
+                if (data && data.defaultOpen) {
+                    el.innerHTML = '<span class="text-success"><span class="status-dot ok"></span>เชื่อมต่อสำเร็จ — ดึงการตั้งค่าจาก Google Sheet ได้</span>';
+                    setStatusBadge('เชื่อมต่อ Google Apps Script สำเร็จ', 'badge-success');
+                    if (data.updatedAt) $('lastSaved').textContent = 'บันทึกล่าสุด: ' + formatDate(data.updatedAt);
+                } else {
+                    el.innerHTML = '<span class="text-danger"><span class="status-dot bad"></span>GAS ตอบกลับผิดปกติ</span>';
+                }
+            } catch (e) {
+                el.innerHTML = '<span class="text-danger"><span class="status-dot bad"></span>เชื่อมต่อไม่ได้: ' + e.message + '</span>';
             }
         }
 
@@ -317,40 +477,43 @@
             await loadAll();
 
             // ล็อกอิน PIN
-            document.getElementById('pinBtn').addEventListener('click', unlock);
-            document.getElementById('pinInput').addEventListener('keydown', function (e) {
+            $('pinBtn').addEventListener('click', unlock);
+            $('pinInput').addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') unlock();
             });
 
+            // ทดสอบการเชื่อมต่อ
+            $('testConnBtn').addEventListener('click', testConnection);
+
             // เพิ่ม/ลบแถวงวดพิเศษ
-            document.getElementById('addOvBtn').addEventListener('click', function () { addRow(null); refreshJson(); });
-            document.getElementById('ovBody').addEventListener('click', function (e) {
+            $('addOvBtn').addEventListener('click', function () { addRow(null); refreshJson(); });
+            $('ovBody').addEventListener('click', function (e) {
                 if (e.target.closest('.ov-del')) {
                     e.target.closest('tr').remove();
                     refreshJson();
                 }
             });
-            document.getElementById('ovBody').addEventListener('input', refreshJson);
-            document.getElementById('ovBody').addEventListener('change', refreshJson);
+            $('ovBody').addEventListener('input', refreshJson);
+            $('ovBody').addEventListener('change', refreshJson);
 
             // ค่าเริ่มต้น + บังคับเปิด/ปิด + PIN ใหม่ → สร้าง JSON อัตโนมัติ
-            document.getElementById('defOpen').addEventListener('input', refreshJson);
-            document.getElementById('defClose').addEventListener('input', refreshJson);
-            document.getElementById('newPin').addEventListener('input', refreshJson);
+            $('defOpen').addEventListener('input', refreshJson);
+            $('defClose').addEventListener('input', refreshJson);
+            $('newPin').addEventListener('input', refreshJson);
             document.querySelectorAll('input[name="override"]').forEach(function (r) {
                 r.addEventListener('change', refreshJson);
             });
 
             // บันทึกการตั้งค่า
-            document.getElementById('saveBtn').addEventListener('click', saveSettings);
+            $('saveBtn').addEventListener('click', saveSettings);
 
             // ขั้นสูง: คัดลอก / ดาวน์โหลด
-            document.getElementById('advToggleBtn').addEventListener('click', function () {
-                var el = document.getElementById('advSection');
+            $('advToggleBtn').addEventListener('click', function () {
+                var el = $('advSection');
                 el.style.display = el.style.display === 'none' ? 'block' : 'none';
             });
-            document.getElementById('copyBtn').addEventListener('click', function () {
-                var ta = document.getElementById('jsonOut');
+            $('copyBtn').addEventListener('click', function () {
+                var ta = $('jsonOut');
                 ta.select();
                 ta.setSelectionRange(0, ta.value.length);
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -362,8 +525,8 @@
                     alert('คัดลอก config.json เรียบร้อยแล้ว');
                 }
             });
-            document.getElementById('dlBtn').addEventListener('click', function () {
-                var json = document.getElementById('jsonOut').value;
+            $('dlBtn').addEventListener('click', function () {
+                var json = $('jsonOut').value;
                 var blob = new Blob([json], { type: 'application/json' });
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
@@ -375,15 +538,15 @@
         });
 
         async function unlock() {
-            var pin = document.getElementById('pinInput').value.trim();
+            var pin = $('pinInput').value.trim();
             if (!pin) return;
             var h = await sha256Hex(pin);
             if (h === existingPinHash) {
                 enteredPin = pin;
-                document.getElementById('pinGate').style.display = 'none';
-                document.getElementById('mainPanel').style.display = 'block';
+                $('pinGate').style.display = 'none';
+                $('mainPanel').style.display = 'block';
             } else {
-                document.getElementById('pinError').style.display = 'block';
+                $('pinError').style.display = 'block';
             }
         }
     </script>
