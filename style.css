@@ -151,3 +151,28 @@ body {
         height:100vh;
         width:100vw;
     }
+
+/* ===== Responsive (รองรับมือถือ) ===== */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    body {
+        overflow-x: hidden;
+    }
+    @media (max-width: 575.98px) {
+        #timer {
+            font-size: 1.1em;
+            padding: 2px;
+        }
+        #timer div {
+            min-width: 56px;
+            padding: 4px 2px;
+            margin: 2px;
+        }
+        .container-sm,
+        .container {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+    }

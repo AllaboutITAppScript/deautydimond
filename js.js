@@ -184,7 +184,7 @@ function updateTimer() {
 	if (status === 0) {
 		var openLabel = st.openTime ? ' เวลา ' + st.openTime + ' น.' : '';
 		document.getElementById("msgStatus").innerHTML =
-			`<h2>จะเปิดให้เล่นกิจกรรมทายหวย${openLabel}  </h2> <img src="https://media0.giphy.com/media/AgBce8OuQ5mbencR1H/200w.webp?cid=ecf05e47kxj12cpe8nbd0m4lddbapg86iir9027qrx22bqb3&ep=v1_gifs_related&rid=200w.webp&ct=s" alt="Girl in a jacket" style="width:370px;height:300px;">`;
+			`<h2>จะเปิดให้เล่นกิจกรรมทายหวย${openLabel}  </h2> <img src="https://media0.giphy.com/media/AgBce8OuQ5mbencR1H/200w.webp?cid=ecf05e47kxj12cpe8nbd0m4lddbapg86iir9027qrx22bqb3&ep=v1_gifs_related&rid=200w.webp&ct=s" alt="Girl in a jacket" style="width:100%;max-width:370px;height:auto;">`;
 		setDisplay("timer", "");
 		setDisplay("btnResult", "none");
 		setDisplay("cover", "none");
@@ -197,7 +197,7 @@ function updateTimer() {
 	} else {
 		document.getElementById("msgStatus").innerHTML =
 			'<div class="card"><div class="card-body">' +
-			'<h2><center><img src="https://i.pinimg.com/originals/10/6b/68/106b68071a23586acfc1e3220740482f.gif" alt="Girl in a jacket" style="width:370px;height:300px;">' +
+			'<h2><center><img src="https://i.pinimg.com/originals/10/6b/68/106b68071a23586acfc1e3220740482f.gif" alt="Girl in a jacket" style="width:100%;max-width:370px;height:auto;">' +
 			'<h2 class="text-danger">ขณะนี้ปิดระบบการทายหวยแล้วค่ะ</h2>' +
 			'<input type="button" class="btn btn-danger" style="font-weight: bold; display: inline;" value="ปิดหน้านี้" onclick="closeMe()"> </center>' +
 			'</div></div>';
