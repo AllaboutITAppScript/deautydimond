@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าระบบทายหวย</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #f4f6fb;
+        }
+        .card {
+            border: none;
+        }
+        .card-header {
+            font-weight: 700;
+        }
+        .font-monospace {
+            font-family: Consolas, Menlo, monospace;
+            font-size: 12px;
+        }
+        .ov-date {
+            min-width: 130px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4" style="max-width: 880px;">
+
+        <!-- หัวเรื่อง -->
+        <div class="text-center mb-4">
+            <h3><i class="fas fa-cogs text-primary mr-2"></i>หน้าตั้งค่าระบบทายหวย</h3>
+            <p class="text-muted mb-1">ตั้งเวลาเปิด-ปิดการทายหวยทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) ทุกปี โดยไม่ต้องแก้โค้ด</p>
+            <span class="badge badge-info" id="configStatus">กำลังโหลดการตั้งค่าปัจจุบัน...</span>
+        </div>
+
+        <!-- หน้าล็อกอิน PIN -->
+        <div id="pinGate" class="card shadow-sm mx-auto" style="max-width: 420px;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-lock text-warning mr-1"></i>กรอกรหัสผ่านผู้ดูแล</h5>
+                <input type="password" id="pinInput" class="form-control" placeholder="รหัสผ่าน (PIN)" maxlength="20" autocomplete="off">
+                <div id="pinError" class="text-danger mt-2" style="display:none;"><i class="fas fa-times-circle mr-1"></i>รหัสผ่านไม่ถูกต้อง</div>
+                <button id="pinBtn" class="btn btn-primary btn-block mt-3"><i class="fas fa-sign-in-alt mr-1"></i>เข้าสู่ระบบ</button>
+                <small class="text-muted d-block mt-2">รหัสเริ่มต้น: <code>1234</code> (เปลี่ยนได้ด้านล่าง)</small>
+            </div>
+        </div>
+
+        <!-- หน้าตั้งค่า -->
+        <div id="mainPanel" style="display:none;">
+
+            <!-- 1. ควบคุมด่วน -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark"><i class="fas fa-power-off mr-2"></i>ควบคุมด่วน (ปิด/เปิดทั้งระบบ)</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="override" id="ovAuto" value="auto" checked>
+                        <label class="form-check-label" for="ovAuto">
+                            <i class="fas fa-calendar-check text-success mr-1"></i>อัตโนมัติตามตารางงวด (วันที่ 1 และ 16 ของทุกเดือน)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="override" id="ovOpen" value="open">
+                        <label class="form-check-label" for="ovOpen">
+                            <i class="fas fa-play-circle text-primary mr-1"></i>บังคับเปิดระบบทันที (ทุกวัน ทุกเวลา)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="override" id="ovClose" value="close">
+                        <label class="form-check-label" for="ovClose">
+                            <i class="fas fa-stop-circle text-danger mr-1"></i>บังคับปิดระบบทันที
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ค่าเริ่มต้นทุกงวด -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><i class="fas fa-clock mr-2 text-primary"></i>เวลาเปิด-ปิดค่าเริ่มต้นของทุกงวด</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="font-weight-bold">เวลาเปิดให้ทาย</label>
+                            <input type="time" id="defOpen" class="form-control" value="06:00">
+                        </div>
+                        <div class="col-6">
+                            <label class="font-weight-bold">เวลาปิดรับทาย</label>
+                            <input type="time" id="defClose" class="form-control" value="14:00">
+                        </div>
+                    </div>
+                    <small class="text-muted">ระบบจะเปิด-ปิดอัตโนมัติทุกงวด (วันที่ 1 และ 16 ของทุกเดือน) ตามเวลานี้ ทุกปี ไม่ต้องมาแก้โค้ดอีก</small>
+                </div>
+            </div>
+
+            <!-- 3. งวดที่กำหนดพิเศษ -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><i class="fas fa-exclamation-circle mr-2 text-warning"></i>งวดที่กำหนดพิเศษ (ยกเว้น)</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">ใช้เฉพาะงวดที่ต้องการ <b>ปิดทั้งงวด</b> หรือ <b>ปรับเวลาต่างจากค่าเริ่มต้น</b> เช่น งวดที่วันออกจริงไม่ตรงกับวันที่ 1/16 หรือต้องการเลื่อนเวลา ระบบปกติไม่ต้องใส่แถวอะไรเลย</p>
+                    <table class="table table-sm table-bordered mb-2">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width: 35%;">วันที่ (YYYY-MM-DD)</th>
+                                <th class="text-center" style="width: 15%;">เปิดงวดนี้</th>
+                                <th style="width: 18%;">เวลาเปิด</th>
+                                <th style="width: 18%;">เวลาปิด</th>
+                                <th style="width: 14%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="ovBody"></tbody>
+                    </table>
+                    <button id="addOvBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-plus mr-1"></i>เพิ่มแถวงวดพิเศษ</button>
+                </div>
+            </div>
+
+            <!-- 4. เปลี่ยนรหัสผ่าน -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><i class="fas fa-key mr-2 text-danger"></i>เปลี่ยนรหัสผ่าน (PIN)</div>
+                <div class="card-body">
+                    <input type="password" id="newPin" class="form-control" placeholder="รหัสผ่านใหม่ (เว้นว่าง = ใช้รหัสเดิม)" maxlength="20" autocomplete="off">
+                    <small class="text-muted">รหัสเริ่มต้นคือ <code>1234</code> — ควรเปลี่ยนหลังใช้งานครั้งแรก</small>
+                </div>
+            </div>
+
+            <!-- 5. สร้าง config.json -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><i class="fas fa-file-code mr-2 text-info"></i>สร้างไฟล์ config.json</div>
+                <div class="card-body">
+                    <div class="form-row mb-2">
+                        <div class="col-auto">
+                            <button id="genBtn" class="btn btn-primary"><i class="fas fa-sync-alt mr-1"></i>สร้าง JSON</button>
+                        </div>
+                        <div class="col-auto">
+                            <button id="copyBtn" class="btn btn-secondary"><i class="fas fa-copy mr-1"></i>คัดลอก</button>
+                        </div>
+                        <div class="col-auto">
+                            <button id="dlBtn" class="btn btn-info"><i class="fas fa-download mr-1"></i>ดาวน์โหลดไฟล์</button>
+                        </div>
+                    </div>
+                    <textarea id="jsonOut" class="form-control font-monospace" rows="10" readonly></textarea>
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <b>วิธีใช้ (ถ้าไม่ได้ใช้ปุ่มบันทึกลง GitHub ด้านล่าง):</b> กด "สร้าง JSON" → "คัดลอก" → เปิดไฟล์ <code>config.json</code> ใน GitHub repository → กดไอคอนดินสอ (Edit) → ลบเนื้อหาเดิมแล้ววางทับ → กด <b>Commit changes</b> ระบบจะอัปเดตให้ผู้ใช้ทุกคนภายใน 1-2 นาที
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. บันทึกลง GitHub โดยตรง -->
+            <div class="card shadow-sm mb-4 border-danger">
+                <div class="card-header bg-danger text-white"><i class="fab fa-github mr-2"></i>บันทึกลง GitHub โดยตรง (ทางลัด)</div>
+                <div class="card-body">
+                    <div class="alert alert-warning small">
+                        ⚠️ วิธีนี้ต้องใช้ <b>Personal Access Token (PAT)</b> ของ GitHub ตัว token จะถูกเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น (localStorage) — <b>ห้ามเปิดหน้านี้บนเครื่องที่ผู้อื่นใช้งานร่วม</b> เพราะคนที่เปิดหน้านี้จะเห็น token และเข้าถึง GitHub ของคุณได้
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6 mb-2">
+                            <input type="password" id="ghToken" class="form-control" placeholder="GitHub PAT (Settings → Developer settings → Personal access tokens → Generate new token คลาสสิก → เลือก scope: repo)" autocomplete="off">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <input type="text" id="ghOwner" class="form-control" placeholder="Owner (ชื่อ GitHub)">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <input type="text" id="ghRepo" class="form-control" placeholder="Repo (ชื่อ repository)">
+                        </div>
+                    </div>
+                    <button id="ghSaveBtn" class="btn btn-danger"><i class="fab fa-github mr-1"></i>บันทึกลง GitHub (commit config.json)</button>
+                    <span id="ghStatus" class="ml-2 small font-weight-bold"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // ============================================================
+        // หน้าตั้งค่าระบบทายหวย
+        // ============================================================
+
+        // ค่า hash ของรหัสเริ่มต้น "1234"
+        var DEFAULT_HASH = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
+        var existingPinHash = null;
+        var jsonTimer = null;
+
+        function setStatusBadge(text, cls) {
+            var el = document.getElementById('configStatus');
+            el.textContent = text;
+            el.className = 'badge ' + (cls || 'badge-info');
+        }
+
+        async function sha256Hex(str) {
+            var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }
+
+        function authHeader(token) {
+            return { Authorization: (token.indexOf('github_pat_') === 0 ? 'Bearer ' : 'token ') + token };
+        }
+
+        // ---------- โหลด config ปัจจุบัน ----------
+        async function loadConfig() {
+            try {
+                var res = await fetch('config.json', { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                if (!data || typeof data !== 'object') throw new Error('รูปแบบ config ไม่ถูกต้อง');
+                existingPinHash = data.adminPinHash || DEFAULT_HASH;
+                document.getElementById('defOpen').value = data.defaultOpen || '06:00';
+                document.getElementById('defClose').value = data.defaultClose || '14:00';
+                if (data.manualOverride === 'open') document.getElementById('ovOpen').checked = true;
+                else if (data.manualOverride === 'close') document.getElementById('ovClose').checked = true;
+                else document.getElementById('ovAuto').checked = true;
+                var body = document.getElementById('ovBody');
+                body.innerHTML = '';
+                (data.overrides || []).forEach(function (ov) { addRow(ov); });
+                setStatusBadge('โหลดการตั้งค่าปัจจุบันแล้ว', 'badge-success');
+            } catch (e) {
+                console.warn('โหลด config.json ไม่สำเร็จ', e);
+                existingPinHash = existingPinHash || DEFAULT_HASH;
+                setStatusBadge('โหลด config.json ไม่ได้ — เปิดผ่านเว็บที่ deploy แล้ว (ใช้ค่าเริ่มต้น)', 'badge-danger');
+            }
+            refreshJson();
+        }
+
+        // ---------- ตารางงวดพิเศษ ----------
+        function addRow(ov) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="text" class="form-control form-control-sm ov-date" placeholder="YYYY-MM-DD" value="' + (ov && ov.date ? ov.date : '') + '"></td>' +
+                '<td class="text-center"><input type="checkbox" class="ov-enabled" ' + (!ov || ov.enabled !== false ? 'checked' : '') + '></td>' +
+                '<td><input type="time" class="form-control form-control-sm ov-open" value="' + (ov && ov.open ? ov.open : '06:00') + '"></td>' +
+                '<td><input type="time" class="form-control form-control-sm ov-close" value="' + (ov && ov.close ? ov.close : '14:00') + '"></td>' +
+                '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm ov-del"><i class="fas fa-trash"></i></button></td>';
+            document.getElementById('ovBody').appendChild(tr);
+        }
+
+        // ---------- สร้าง config ----------
+        async function buildConfig() {
+            var rows = [];
+            document.querySelectorAll('#ovBody tr').forEach(function (tr) {
+                var date = tr.querySelector('.ov-date').value.trim();
+                if (!date) return;
+                rows.push({
+                    date: date,
+                    enabled: tr.querySelector('.ov-enabled').checked,
+                    open: tr.querySelector('.ov-open').value || document.getElementById('defOpen').value,
+                    close: tr.querySelector('.ov-close').value || document.getElementById('defClose').value
+                });
+            });
+            var pinHash = existingPinHash || DEFAULT_HASH;
+            var np = document.getElementById('newPin').value.trim();
+            if (np) pinHash = await sha256Hex(np);
+            var ovVal = document.querySelector('input[name="override"]:checked').value;
+            return {
+                schemaVersion: 2,
+                manualOverride: ovVal === 'auto' ? null : ovVal,
+                defaultOpen: document.getElementById('defOpen').value || '06:00',
+                defaultClose: document.getElementById('defClose').value || '14:00',
+                adminPinHash: pinHash,
+                overrides: rows
+            };
+        }
+
+        function refreshJson() {
+            clearTimeout(jsonTimer);
+            jsonTimer = setTimeout(async function () {
+                try {
+                    var cfg = await buildConfig();
+                    document.getElementById('jsonOut').value = JSON.stringify(cfg, null, 2);
+                } catch (e) {
+                    console.error('สร้าง JSON ไม่สำเร็จ', e);
+                }
+            }, 250);
+        }
+
+        // ---------- บันทึกลง GitHub โดยตรง ----------
+        async function saveToGitHub() {
+            var token = document.getElementById('ghToken').value.trim();
+            var owner = document.getElementById('ghOwner').value.trim() || 'AllaboutITAppScript';
+            var repo = document.getElementById('ghRepo').value.trim() || 'deautydimond';
+            var statusEl = document.getElementById('ghStatus');
+            localStorage.setItem('ghToken', token);
+            localStorage.setItem('ghOwner', owner);
+            localStorage.setItem('ghRepo', repo);
+            if (!token) {
+                statusEl.innerHTML = '<span class="text-danger">⚠️ กรุณากรอก GitHub PAT ก่อน</span>';
+                return;
+            }
+            statusEl.innerHTML = '<span class="text-primary">กำลังบันทึก...</span>';
+            try {
+                var cfg = await buildConfig();
+                var json = JSON.stringify(cfg, null, 2);
+                var url = 'https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/config.json';
+
+                // อ่านค่า sha ของไฟล์เดิม (จำเป็นสำหรับการแก้ไฟล์)
+                var getRes = await fetch(url, { headers: authHeader(token) });
+                var sha = null;
+                if (getRes.status === 200) {
+                    var meta = await getRes.json();
+                    sha = meta.sha;
+                } else if (getRes.status !== 404) {
+                    var err = await getRes.json().catch(function () { return {}; });
+                    statusEl.innerHTML = '<span class="text-danger">❌ อ่านไฟล์ไม่สำเร็จ: ' + (err.message || getRes.status) + '</span>';
+                    return;
+                }
+
+                var body = {
+                    message: 'อัปเดตการตั้งค่าระบบทายหวย (config.json)',
+                    content: btoa(unescape(encodeURIComponent(json)))
+                };
+                if (sha) body.sha = sha;
+
+                var putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: Object.assign(authHeader(token), { 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(body)
+                });
+
+                if (putRes.ok) {
+                    statusEl.innerHTML = '<span class="text-success">✅ บันทึกสำเร็จ! ผู้ใช้ทุกคนจะเห็นการตั้งค่าใหม่ภายใน 1-2 นาที</span>';
+                    existingPinHash = cfg.adminPinHash;
+                    document.getElementById('newPin').value = '';
+                    setStatusBadge('บันทึกลง GitHub แล้ว', 'badge-success');
+                } else {
+                    var putErr = await putRes.json().catch(function () { return {}; });
+                    statusEl.innerHTML = '<span class="text-danger">❌ บันทึกไม่สำเร็จ: ' + (putErr.message || putRes.status) + ' (ตรวจว่า PAT มีสิทธิ์เขียน repo นี้)</span>';
+                }
+            } catch (e) {
+                statusEl.innerHTML = '<span class="text-danger">❌ เกิดข้อผิดพลาด: ' + e.message + '</span>';
+            }
+        }
+
+        // ---------- เหตุการณ์ ----------
+        window.addEventListener('DOMContentLoaded', async function () {
+            document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
+            document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || 'AllaboutITAppScript';
+            document.getElementById('ghRepo').value = localStorage.getItem('ghRepo') || 'deautydimond';
+
+            await loadConfig();
+
+            // ล็อกอิน PIN
+            document.getElementById('pinBtn').addEventListener('click', unlock);
+            document.getElementById('pinInput').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') unlock();
+            });
+
+            // เพิ่ม/ลบแถวงวดพิเศษ
+            document.getElementById('addOvBtn').addEventListener('click', function () { addRow(null); refreshJson(); });
+            document.getElementById('ovBody').addEventListener('click', function (e) {
+                if (e.target.closest('.ov-del')) {
+                    e.target.closest('tr').remove();
+                    refreshJson();
+                }
+            });
+            document.getElementById('ovBody').addEventListener('input', refreshJson);
+            document.getElementById('ovBody').addEventListener('change', refreshJson);
+
+            // ค่าเริ่มต้น + บังคับเปิด/ปิด + PIN ใหม่ → สร้าง JSON อัตโนมัติ
+            document.getElementById('defOpen').addEventListener('input', refreshJson);
+            document.getElementById('defClose').addEventListener('input', refreshJson);
+            document.getElementById('newPin').addEventListener('input', refreshJson);
+            document.querySelectorAll('input[name="override"]').forEach(function (r) {
+                r.addEventListener('change', refreshJson);
+            });
+
+            // ปุ่มสร้าง/คัดลอก/ดาวน์โหลด
+            document.getElementById('genBtn').addEventListener('click', refreshJson);
+            document.getElementById('copyBtn').addEventListener('click', function () {
+                var ta = document.getElementById('jsonOut');
+                ta.select();
+                ta.setSelectionRange(0, ta.value.length);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(ta.value).then(function () {
+                        alert('คัดลอก config.json เรียบร้อยแล้ว');
+                    });
+                } else {
+                    document.execCommand('copy');
+                    alert('คัดลอก config.json เรียบร้อยแล้ว');
+                }
+            });
+            document.getElementById('dlBtn').addEventListener('click', function () {
+                var json = document.getElementById('jsonOut').value;
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'config.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // บันทึกลง GitHub โดยตรง
+            document.getElementById('ghSaveBtn').addEventListener('click', saveToGitHub);
+        });
+
+        async function unlock() {
+            var pin = document.getElementById('pinInput').value.trim();
+            if (!pin) return;
+            var h = await sha256Hex(pin);
+            if (h === existingPinHash) {
+                document.getElementById('pinGate').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+            } else {
+                document.getElementById('pinError').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
