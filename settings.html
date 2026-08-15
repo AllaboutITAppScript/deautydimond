@@ -64,6 +64,94 @@
         #saveStatus {
             display: none;
         }
+
+        /* ===== Mobile-first ===== */
+        body {
+            font-size: 15px;
+        }
+        .container-custom {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+        #gasUrlInput {
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .form-control {
+            min-height: 44px; /* พื้นที่แตะบนมือถือ */
+        }
+        .btn {
+            min-height: 40px;
+        }
+        .btn-sm {
+            min-height: 36px;
+        }
+
+        /* ตารางงวดพิเศษ: บนมือถือเปลี่ยนเป็นบัตรซ้อนกัน */
+        @media (max-width: 575.98px) {
+            .ov-table thead {
+                display: none;
+            }
+            .ov-table,
+            .ov-table tbody,
+            .ov-table tr,
+            .ov-table td {
+                display: block;
+                width: 100%;
+            }
+            .ov-table tr {
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 12px;
+                margin-bottom: 12px;
+                background: #fff;
+            }
+            .ov-table td {
+                border: none;
+                padding: 6px 0;
+            }
+            .ov-table td.text-center {
+                text-align: left;
+            }
+            .ov-table td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: #6c757d;
+                margin-bottom: 4px;
+            }
+            .ov-table .ov-enabled {
+                width: 22px;
+                height: 22px;
+            }
+            .ov-table .ov-del {
+                width: 100%;
+            }
+
+            /* การ์ดเชื่อมต่อ GAS: ปุ่มกับสถานะเรียงแนวตั้ง */
+            .conn-row {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            .conn-row .btn {
+                width: 100%;
+            }
+            #connStatus {
+                margin-left: 0 !important;
+                margin-top: 10px;
+            }
+
+            h3 {
+                font-size: 1.35rem;
+            }
+            .card-header {
+                font-size: 0.92rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -103,7 +191,7 @@
                                placeholder="https://script.google.com/macros/s/.../exec">
                         <small class="text-muted">URL นี้กำหนดในไฟล์ <code>config.json</code> — แก้ที่ GitHub เท่านั้น</small>
                     </div>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center conn-row">
                         <button id="testConnBtn" class="btn btn-outline-primary btn-sm"><i class="fas fa-sync-alt mr-1"></i>ทดสอบการเชื่อมต่อ</button>
                         <div id="connStatus" class="ml-3 small"></div>
                     </div>
@@ -158,7 +246,7 @@
                 <div class="card-header"><span class="step-badge">3</span><i class="fas fa-exclamation-circle mr-2 text-warning"></i>งวดที่กำหนดพิเศษ (ยกเว้น)</div>
                 <div class="card-body">
                     <p class="text-muted small mb-2">ใช้เฉพาะงวดที่ต้องการ <b>ปิดทั้งงวด</b> หรือ <b>ปรับเวลาต่างจากค่าเริ่มต้น</b> เช่น งวดที่วันออกจริงไม่ตรงกับวันที่ 1/16 หรือต้องการเลื่อนเวลา ระบบปกติไม่ต้องใส่แถวอะไรเลย</p>
-                    <table class="table table-sm table-bordered mb-2">
+                    <table class="table table-sm table-bordered mb-2 ov-table">
                         <thead class="thead-light">
                             <tr>
                                 <th style="width: 32%;">วันที่ (YYYY-MM-DD)</th>
@@ -321,11 +409,11 @@
         function addRow(ov) {
             var tr = document.createElement('tr');
             tr.innerHTML =
-                '<td><input type="text" class="form-control form-control-sm ov-date" placeholder="YYYY-MM-DD" value="' + (ov && ov.date ? ov.date : '') + '"></td>' +
-                '<td class="text-center"><input type="checkbox" class="ov-enabled" ' + (!ov || ov.enabled !== false ? 'checked' : '') + '></td>' +
-                '<td><input type="time" class="form-control form-control-sm ov-open" value="' + (ov && ov.open ? ov.open : '06:00') + '"></td>' +
-                '<td><input type="time" class="form-control form-control-sm ov-close" value="' + (ov && ov.close ? ov.close : '14:00') + '"></td>' +
-                '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm ov-del"><i class="fas fa-trash"></i></button></td>';
+                '<td data-label="วันที่"><input type="text" class="form-control form-control-sm ov-date" placeholder="YYYY-MM-DD" value="' + (ov && ov.date ? ov.date : '') + '"></td>' +
+                '<td data-label="เปิดงวดนี้" class="text-center"><input type="checkbox" class="ov-enabled" ' + (!ov || ov.enabled !== false ? 'checked' : '') + '></td>' +
+                '<td data-label="เวลาเปิด"><input type="time" class="form-control form-control-sm ov-open" value="' + (ov && ov.open ? ov.open : '06:00') + '"></td>' +
+                '<td data-label="เวลาปิด"><input type="time" class="form-control form-control-sm ov-close" value="' + (ov && ov.close ? ov.close : '14:00') + '"></td>' +
+                '<td data-label="จัดการ" class="text-center"><button type="button" class="btn btn-outline-danger btn-sm ov-del"><i class="fas fa-trash"></i></button></td>';
             $('ovBody').appendChild(tr);
         }
 
