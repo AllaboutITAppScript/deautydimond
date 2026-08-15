@@ -73,10 +73,6 @@
             padding-left: 14px;
             padding-right: 14px;
         }
-        #gasUrlInput {
-            word-break: break-all;
-            font-size: 12px;
-        }
         .form-control {
             min-height: 44px; /* พื้นที่แตะบนมือถือ */
         }
@@ -185,12 +181,7 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header"><i class="fas fa-plug mr-2 text-success"></i>การเชื่อมต่อ Google Apps Script (Google Sheet)</div>
                 <div class="card-body">
-                    <div class="form-group mb-2">
-                        <label class="font-weight-bold">URL ของ Web App (gasUrl)</label>
-                        <input type="text" id="gasUrlInput" class="form-control font-monospace" readonly
-                               placeholder="https://script.google.com/macros/s/.../exec">
-                        <small class="text-muted">URL นี้กำหนดในไฟล์ <code>config.json</code> — แก้ที่ GitHub เท่านั้น</small>
-                    </div>
+                    <p class="text-muted small mb-2">การตั้งค่าจะบันทึกลง Google Sheet ผ่าน URL ที่ตั้งไว้ในไฟล์ <code>config.json</code> (ไม่ต้องแก้เอง)</p>
                     <div class="d-flex align-items-center conn-row">
                         <button id="testConnBtn" class="btn btn-outline-primary btn-sm"><i class="fas fa-sync-alt mr-1"></i>ทดสอบการเชื่อมต่อ</button>
                         <div id="connStatus" class="ml-3 small"></div>
@@ -357,7 +348,6 @@
             } catch (e) {}
 
             gasUrl = (local && local.gasUrl) || '';
-            $('gasUrlInput').value = gasUrl || '(ยังไม่ตั้งค่า — ดูวิธีในไฟล์ gas.gs)';
 
             var current = null;
             var connected = false;
