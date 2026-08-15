@@ -72,6 +72,14 @@ function nextDrawDay(from) {
 	return new Date(d.getFullYear(), d.getMonth() + 1, 1);
 }
 
+// ตรวจว่าเป็นวันก่อนวันออกหวย 1 วันหรือไม่ (วันนี้ = งวดถัดไปคือพรุ่งนี้)
+function isDayBeforeDraw(now) {
+	var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	var nd = nextDrawDay(now);
+	var diffDays = Math.round((nd - today) / 86400000);
+	return diffDays === 1;
+}
+
 // คำนวณสถานะ: 0 = ยังไม่เปิด / 1 = เปิดให้ทาย / 2 = ปิด
 function computeStatus(now) {
 	var defOpen = (config && config.defaultOpen) || '06:00';
@@ -99,8 +107,31 @@ function computeStatus(now) {
 		return { status: 2, openTime: defOpen, closeTime: defClose };
 	}
 
-	// อัตโนมัติตามตารางงวด — วันไม่ใช่งวดให้ปิด
-	if (!isDrawDay(now)) return { status: 2, openTime: defOpen, closeTime: defClose };
+	// อัตโนมัติตามตารางงวด
+	if (!isDrawDay(now)) {
+		// วันก่อนวันออกหวย 1 วัน → ไม่แสดงข้อความปิด แต่นับถอยหลังถึงเวลาเปิดของงวดถัดไป
+		if (isDayBeforeDraw(now)) {
+			var nds = dateStr(nextDrawDay(now));
+			var nOpenStr = config.defaultOpen;
+			var nCloseStr = config.defaultClose;
+			for (var k = 0; k < config.overrides.length; k++) {
+				if (config.overrides[k].date === nds) {
+					var nov = config.overrides[k];
+					if (nov.enabled === false) {
+						// งวดถัดไปปิดพิเศษ → ยังคงแสดงข้อความปิด
+						return { status: 2, openTime: defOpen, closeTime: defClose };
+					}
+					if (nov.open) nOpenStr = nov.open;
+					if (nov.close) nCloseStr = nov.close;
+				}
+			}
+			var nOpen = combineHM(nds, nOpenStr);
+			if (now < nOpen) return { status: 0, timeEnd: nOpen, openTime: nOpenStr, closeTime: nCloseStr };
+			return { status: 2, openTime: nOpenStr, closeTime: nCloseStr };
+		}
+		// ห่างจากงวดถัดไปเกิน 1 วัน → แสดงข้อความปิด
+		return { status: 2, openTime: defOpen, closeTime: defClose };
+	}
 	var ds = dateStr(now);
 	var ov = null;
 	for (var i = 0; i < config.overrides.length; i++) {
