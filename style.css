@@ -1,178 +1,627 @@
 @import url('https://fonts.googleapis.com/css2?family=Itim&family=K2D&display=swap');
 
+/* ============================================================
+   กิจกรรมทายผลเลขท้าย 2 ตัว — หน้าหลัก (index)
+   ออกแบบใหม่: ทันสมัย เรียบหรู รองรับ Mobile / LINE (LIFF) 100%
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
 body {
-  background-color: #C1D8C3;
-  font-family: 'K2D', sans-serif;
-}
-
-
-.form-check-input,
-.form-check-input:focus {
-  box-shadow: none;
-  border-color: #131414;
-  outline: 0;
-}
-
-.form-control,
-.form-control:focus {
-  box-shadow: none;
-  border-color: #54a4ff;
-  outline: 0;
-}
-
-.nav-link {
-  padding: .4rem;
-  font-size: 14px;
-}
-
-
-.boxinput {
-  font-size: 14px;
-
-}
-
-.input-group-text {
-  background-color: #FFFFFF;
-  border-color: #ecd95f;
-}
-
-.card-body {
-  padding: 2px;
-}
-
-.list-group {
-  width: 100%;
-
-}
-
-.list-group-item {
-  border-left: 0px;
-  border-top: 0px;
-  border-right: 0px;
-  border-radius: 0px;
-}
-
-.list-group-item label {
-  word-wrap: break-word;
-  user-select: none;
-  overflow: hidden;
-  width: 14rem;
-}
-
-.dropdown-menu {
-  min-width: inherit;
-  font-size: 13px;
-}
-
-.checked {
-  text-decoration: line-through;
-  color: red;
-}
-
-.boxlist {
-  height: 250px;
-  overflow-y: scroll;
+  background: linear-gradient(165deg, #1c0b3a 0%, #3b1a6b 38%, #7a2488 72%, #a1327a 100%);
+  background-attachment: fixed;
+  font-family: 'line_seed_sans_th', 'K2D', 'Itim', sans-serif;
+  color: #fff;
   overflow-x: hidden;
-  max-height: 250px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-::-webkit-scrollbar {
-  width: 20px;
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-::-webkit-scrollbar-track {
-  background-color: transparent;
+/* ---------- พื้นหลังตกแต่ง (glow orbs) ---------- */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #abbc29;
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: .5;
+  animation: orbFloat 16s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+  width: 340px;
+  height: 340px;
+  top: -90px;
+  left: -100px;
+  background: radial-gradient(circle, #ff5fa2, transparent 70%);
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  top: 25%;
+  right: -140px;
+  background: radial-gradient(circle, #7c6bff, transparent 70%);
+  animation-delay: -5s;
+}
+
+.orb-3 {
+  width: 320px;
+  height: 320px;
+  bottom: -120px;
+  left: 15%;
+  background: radial-gradient(circle, #ffd76f, transparent 70%);
+  animation-delay: -9s;
+}
+
+@keyframes orbFloat {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(34px) scale(1.08); }
+}
+
+/* ---------- ส่วนหัว + นับถอยหลัง ---------- */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: 2.4rem 1rem 1.5rem;
+  text-align: center;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem 1.05rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .25);
+  backdrop-filter: blur(10px);
+  font-size: .8rem;
+  letter-spacing: .05em;
+  color: #ffe9f3;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+}
+
+.hero-title {
+  margin: 1.1rem 0 .35rem;
+  font-size: 2.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+  background: linear-gradient(92deg, #ffe9a8 0%, #ffb7d5 55%, #d9c7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 8px 28px rgba(255, 180, 220, .22);
+}
+
+.hero-sub {
+  margin: 0 0 1.2rem;
+  font-size: .95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, .85);
+}
+
+/* ตัวนับถอยหลัง (js.js เขียน HTML เข้ามาใน #timer) */
+#timer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: .5rem;
+  padding: .35rem;
+}
+
+#timer h2 {
+  flex-basis: 100%;
+  margin: 0 0 .4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffe08a;
+  text-shadow: 0 2px 12px rgba(255, 200, 120, .4);
+}
+
+#timer div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  padding: .65rem .55rem;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+#timer div span {
+  display: block;
+  margin-top: .35rem;
+  font-size: .72rem;
+  font-weight: 500;
+  color: #ffd9ec;
+  letter-spacing: .08em;
+}
+
+/* ข้อความสถานะ (js.js เขียน HTML เข้ามาใน #msgStatus) */
+#msgStatus {
+  position: relative;
+  z-index: 1;
+}
+
+#msgStatus h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .35);
+}
+
+#msgStatus img {
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .3);
+}
+
+#msgStatus .card {
+  max-width: 26rem;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .2);
   border-radius: 20px;
-  border: 6px solid transparent;
-  background-clip: content-box;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #a7b11b;
+#msgStatus .card .card-body {
+  padding: 1.4rem 1.1rem;
 }
 
-.fc-left h2 {
-  font-size: 15px;
-  /* Adjust the font size as per your preference */
+#msgStatus .card img {
+  max-width: 300px;
+  border-radius: 14px;
+  box-shadow: none;
 }
 
-.fc-right button {
-  /* width: 20px; */
-  font-size: 13px;
+#msgStatus .text-danger {
+  color: #ffa7b5 !important;
 }
 
-.fc-content,
-.fc-day-header,
-.fc-widget-head,
-.fc-day-number {
-  font-size: 10px;
+#msgStatus .btn-danger {
+  border: none;
+  border-radius: 999px;
+  padding: .55rem 1.6rem;
+  background: linear-gradient(135deg, #ff6b81, #ee2d57);
+  box-shadow: 0 8px 20px rgba(238, 45, 87, .4);
 }
 
-.fc-content-skeleton td {
+/* ---------- ส่วนเนื้อหา (cover: รูปโปรโมชั่น + กติกา) ---------- */
+#cover {
+  position: relative;
+  z-index: 1;
+}
+
+.cover-card {
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 22px;
+  padding: .7rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .25);
+}
+
+.cover-card .carousel {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.cover-card .carousel img {
+  object-fit: cover;
+}
+
+.carousel-indicators {
+  margin-bottom: .7rem;
+}
+
+.carousel-indicators button {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, .5);
+  transition: all .25s ease;
+}
+
+.carousel-indicators button.active {
+  width: 24px;
+  background-color: #fff;
+}
+
+/* การ์ดแจ้งกติกา */
+.rules-card {
+  position: relative;
+  border: none !important;
+  border-left: 5px solid #ffc75f !important;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .13) !important;
+  backdrop-filter: blur(12px);
+  color: #fff;
+  padding: 1.25rem 1.1rem 1.1rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .22);
+  overflow: hidden;
+}
+
+.rules-card .alert-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffd97a;
+  margin: 0;
+}
+
+.rules-card p {
+  font-size: .92rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, .93);
+  margin-bottom: .55rem;
+}
+
+.rules-card hr {
+  border-top-color: rgba(255, 255, 255, .18);
+  margin: .9rem 0;
+}
+
+.rules-head {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin-bottom: .7rem;
+}
+
+.rules-head svg {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: #ffc75f;
+}
+
+.btn-close {
+  position: absolute;
+  top: .8rem;
+  right: .8rem;
+  width: 30px;
   height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .18);
+  cursor: pointer;
+  font-size: 0;
 }
-/*  CSS ตัวเลขนับถอยหลัง */
-      #timer {
-				font-size: 1.5em;
-				font-weight: 300;
-				padding: 5px;
-				color: #a4cb15;
 
-			}
+.btn-close::before {
+  content: '✕';
+  font-size: .85rem;
+  line-height: 1;
+  color: #fff;
+}
 
-			#timer div {
-				text-align: center;
-				display: inline-block;
-				min-width: 75px;
-				padding: 5px;
-				background: #ffffff;
-				border-radius: 10px;
-				border: 1px solid #444;
-				margin: 2px;
-			}
-			
-			#timer div span {
-				color:#15932e;
-				display: block;
-				margin-top: 2px;
-				font-size: .6em;
-				font-weight: 300;
-			}    
-#loading{
-        position :fixed;
-        top:0;
-        left:0;
-        z-index:1000;
-        background-color :rgba(255,255,255,0.9);
-        height:100vh;
-        width:100vw;
-    }
+/* ---------- การ์ดกรอกข้อมูล ---------- */
+#loginPage {
+  position: relative;
+  z-index: 1;
+  padding: 0 1rem calc(2rem + env(safe-area-inset-bottom));
+}
 
-/* ===== Responsive (รองรับมือถือ) ===== */
-    img {
-        max-width: 100%;
-        height: auto;
-    }
-    body {
-        overflow-x: hidden;
-    }
-    @media (max-width: 575.98px) {
-        #timer {
-            font-size: 1.1em;
-            padding: 2px;
-        }
-        #timer div {
-            min-width: 56px;
-            padding: 4px 2px;
-            margin: 2px;
-        }
-        .container-sm,
-        .container {
-            padding-left: 12px;
-            padding-right: 12px;
-        }
-    }
+.card-form {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fade-in-page {
+  animation: fadeInUp .6s ease both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.guess-card {
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  border: 1px solid rgba(255, 255, 255, .65);
+}
+
+.guess-card-head {
+  padding: 1.6rem 1.2rem 1.15rem;
+  text-align: center;
+  background: linear-gradient(135deg, #fdf1f8 0%, #f5ecff 100%);
+  border-bottom: 1px dashed #ead6f7;
+}
+
+.avatar-wrap {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto .65rem;
+  padding: 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffb3d1, #c084fc, #ffd76f);
+  box-shadow: 0 8px 22px rgba(255, 140, 190, .4);
+}
+
+.avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #fff;
+}
+
+.guess-user {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #3b1a6b;
+  overflow-wrap: anywhere;
+}
+
+.guess-user-tag {
+  display: inline-block;
+  margin-top: .4rem;
+  padding: .28rem .85rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #8a2c8d;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid #f0dcff;
+}
+
+.guess-card-body {
+  padding: 1.25rem 1.15rem 1.4rem;
+}
+
+.guess-title {
+  margin: 0 0 .25rem;
+  font-size: 1.45rem;
+  font-weight: 800;
+  text-align: center;
+  color: #3b1a6b;
+}
+
+.guess-draw {
+  margin: 0 0 1.1rem;
+  padding: .55rem .6rem;
+  text-align: center;
+  font-size: .9rem;
+  font-weight: 600;
+  color: #8a2c8d;
+  background: #fbf3ff;
+  border: 1px dashed #e2c4f5;
+  border-radius: 12px;
+}
+
+.guess-card-body label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #5b2a7a;
+}
+
+.guess-card-body .form-control {
+  border: 1.5px solid #e6d5f3;
+  border-radius: 12px;
+  min-height: 46px;
+  font-size: 1rem;
+  color: #2d1b4d;
+  background: #fcfaff;
+  padding: .55rem .8rem;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.guess-card-body .form-control:focus {
+  border-color: #b06ae0;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(176, 106, 224, .15);
+}
+
+.guess-card-body .form-control::placeholder {
+  color: #c4b2d6;
+}
+
+/* ตัวเลขทาย — 2 คอลัมน์บนมือถือ / 5 ช่องบนจอใหญ่ */
+.numbers-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: .35rem 0 .5rem;
+}
+
+.numbers-title {
+  font-size: .92rem;
+  font-weight: 700;
+  color: #5b2a7a;
+}
+
+.numbers-row {
+  margin-left: -6px;
+  margin-right: -6px;
+}
+
+.numbers-row .form-group {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.numbers-row label {
+  display: block;
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 600;
+  margin-bottom: .3rem;
+  color: #7a4ea0;
+}
+
+.number-input {
+  text-align: center !important;
+  font-size: 1.35rem !important;
+  font-weight: 800;
+  letter-spacing: .1em;
+  min-height: 54px !important;
+}
+
+/* กล่องยอมรับเงื่อนไข */
+.consent-check {
+  margin: .95rem 0 1.05rem;
+  padding-left: 1.8rem;
+}
+
+.consent-check .form-check-input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: .16rem;
+  border: 1.5px solid #c9a8e0;
+  border-radius: 6px;
+  background-color: #fff;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: all .2s ease;
+}
+
+.consent-check .form-check-input:checked {
+  border-color: #b06ae0;
+  background-color: #b06ae0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3E%3Cpath d='M13.49 3.96 6.68 10.77l-3.4-3.4-1.14 1.14 4.54 4.54 7.95-7.95z'/%3E%3C/svg%3E");
+  background-size: .9em;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.consent-check .form-check-label {
+  font-size: .78rem;
+  line-height: 1.7;
+  color: #6d5b80;
+  display: inline-block;
+}
+
+/* ปุ่มส่งคำทาย */
+.guess-submit {
+  border: none !important;
+  border-radius: 999px !important;
+  min-height: 52px;
+  font-size: 1.02rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em;
+  background: linear-gradient(135deg, #ff4fa3 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 10px 26px rgba(255, 79, 163, .38);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.guess-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(255, 79, 163, .5);
+  filter: brightness(1.06);
+}
+
+.guess-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.guess-submit:disabled {
+  filter: grayscale(.45);
+  opacity: .65 !important;
+  box-shadow: none;
+}
+
+/* หน้าโหลดขณะส่งข้อมูล */
+#loading-overlay {
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+
+#loading-overlay img {
+  width: 130px;
+  max-width: 60%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .35);
+}
+
+#loading-overlay p {
+  margin: .9rem 0 0;
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+
+/* ---------- Responsive (Mobile-first) ---------- */
+@media (max-width: 575.98px) {
+  .hero {
+    padding: 1.7rem .8rem 1.1rem;
+  }
+
+  .hero-title {
+    font-size: 1.7rem;
+  }
+
+  #timer {
+    gap: .35rem;
+  }
+
+  #timer div {
+    min-width: 62px;
+    padding: .55rem .3rem;
+    font-size: 1.5rem;
+    border-radius: 14px;
+  }
+
+  .guess-card-body {
+    padding: 1.05rem .9rem 1.2rem;
+  }
+
+  .guess-title {
+    font-size: 1.3rem;
+  }
+
+  .cover-card {
+    padding: .5rem;
+  }
+
+  #loginPage {
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+}
+
+@media (min-width: 576px) {
+  .guess-card-body {
+    padding: 1.45rem 1.4rem 1.6rem;
+  }
+}
