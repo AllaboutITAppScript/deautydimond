@@ -50,10 +50,11 @@ function doPost(e) {
         manualOverride: body.manualOverride || null,
         defaultOpen: String(body.defaultOpen || '06:00'),
         defaultClose: String(body.defaultClose || '14:00'),
-        overrides: Array.isArray(body.overrides) ? body.overrides : [],
-        banners: Array.isArray(body.banners) ? body.banners : [],
         updatedAt: new Date().toISOString()
       };
+      // เก็บค่าเดิมไว้ ถ้า client ไม่ส่งฟิลด์นั้นมา (กันบันทึกทับลบข้อมูลทิ้ง)
+      if (body.overrides !== undefined) cfg.overrides = Array.isArray(body.overrides) ? body.overrides : [];
+      if (body.banners !== undefined) cfg.banners = Array.isArray(body.banners) ? body.banners : [];
       // เปลี่ยน PIN ถ้ากรอก PIN ใหม่ (อย่างน้อย 4 ตัว)
       var newPin = String(body.newPin || '').trim();
       if (newPin.length >= 4) {
