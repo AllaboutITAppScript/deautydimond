@@ -95,7 +95,25 @@ function getStore_() {
     sheet = ss.insertSheet(CONFIG_SHEET);
     sheet.getRange('A1:B1').setValues([['key', 'value']]);
   }
+  migrateFromProperties_(sheet);
   return sheet;
+}
+
+// ย้ายข้อมูลเก่าที่เคยเก็บใน Script Properties (เวอร์ชันก่อนหน้า) เข้าชีต — ทำครั้งเดียว
+function migrateFromProperties_(sheet) {
+  var props = PropertiesService.getScriptProperties();
+  var raw = props.getProperty('LOTTERY_CONFIG');
+  var pin = props.getProperty('LOTTERY_ADMIN_PIN');
+  if (!raw && !pin) return;
+  var map = readAll_(sheet);
+  if (!map.config && raw) {
+    setCell_(sheet, 'config', raw);
+    props.deleteProperty('LOTTERY_CONFIG');
+  }
+  if (!map.pin && pin) {
+    setCell_(sheet, 'pin', pin);
+    props.deleteProperty('LOTTERY_ADMIN_PIN');
+  }
 }
 
 // ค้นหาแถวของ key ในชีต (คืน { row, value } หรือ null)
