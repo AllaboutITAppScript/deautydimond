@@ -1,17 +1,13 @@
 // =====================================================================
 // ระบบเปิด-ปิดกิจกรรมทายหวย (ทายเลขท้าย 2 ตัว)
 //
-// อ่านการตั้งค่าจาก config.json — เปิด/ปิดได้โดยไม่ต้องแก้ไฟล์นี้
+// อ่านการตั้งค่าจาก config.json + Google Apps Script (gasUrl) — เปิด/ปิดได้โดยไม่ต้องแก้ไฟล์นี้
 //   - manualOverride : null = อัตโนมัติตามตารางงวด / "open" = บังคับเปิด / "close" = บังคับปิด
 //   - defaultOpen / defaultClose : เวลาเปิด-ปิดของทุกงวด
 //   - overrides : รายการงวดที่ปรับพิเศษ (ปิดงวดนั้น หรือปรับเวลา)
 //
 // งวดล็อตเตอรี่รัฐบาลออกวันที่ 1 และ 16 ของทุกเดือน ระบบจะเปิด-ปิดอัตโนมัติทุกงวด ทุกปี
 // =====================================================================
-
-// --- ค่าเริ่มต้นสำรอง ถ้าโหลด config.json ไม่ได้ (ค่าเดิมที่เคย hardcode ไว้) ---
-var FALLBACK_OPEN = new Date(2026, 7, 1, 6, 0, 0);   // 1 ส.ค. 2026 06:00
-var FALLBACK_CLOSE = new Date(2026, 7, 1, 14, 0, 0); // 1 ส.ค. 2026 14:00
 
 var config = null;       // null = ยังโหลด config ไม่เสร็จ
 var configLoaded = false;
@@ -33,11 +29,12 @@ async function loadConfig() {
 					var gasRes = await fetch(config.gasUrl + '?action=getConfig', { cache: 'no-store' });
 					if (gasRes.ok) {
 						var gas = await gasRes.json();
-						if (gas && typeof gas === 'object' && (gas.manualOverride || gas.defaultOpen || gas.defaultClose || (gas.overrides && gas.overrides.length))) {
-							config.manualOverride = gas.manualOverride || null;
+						if (gas && typeof gas === 'object' && gas.defaultOpen) {
+							// GAS เป็นแหล่งข้อมูลหลัก — ค่าเวลาจาก GAS ทับ config.json
+							config.manualOverride = (typeof gas.manualOverride === 'string') ? gas.manualOverride : null;
 							if (gas.defaultOpen) config.defaultOpen = gas.defaultOpen;
 							if (gas.defaultClose) config.defaultClose = gas.defaultClose;
-							config.overrides = Array.isArray(gas.overrides) ? gas.overrides : [];
+							if (Array.isArray(gas.overrides)) config.overrides = gas.overrides;
 						}
 					}
 				} catch (e2) {
@@ -68,8 +65,18 @@ function combineHM(ds, hm) {
 // งวดล็อตเตอรี่รัฐบาลออกวันที่ 1 และ 16 ของทุกเดือน
 function isDrawDay(d) { return d.getDate() === 1 || d.getDate() === 16; }
 
+// หาวันงวดถัดไป (วันที่ 1 หรือ 16 ถัดจากวันที่กำหนด)
+function nextDrawDay(from) {
+	var d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+	if (d.getDate() < 16) return new Date(d.getFullYear(), d.getMonth(), 16);
+	return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+}
+
 // คำนวณสถานะ: 0 = ยังไม่เปิด / 1 = เปิดให้ทาย / 2 = ปิด
 function computeStatus(now) {
+	var defOpen = (config && config.defaultOpen) || '06:00';
+	var defClose = (config && config.defaultClose) || '14:00';
+
 	// โหมดบังคับเปิด/ปิดทั้งระบบ (ตั้งจากหน้าตั้งค่าระบบ)
 	if (configLoaded && config) {
 		if (config.manualOverride === 'open') {
@@ -81,25 +88,34 @@ function computeStatus(now) {
 			return { status: 2, forced: true };
 		}
 	}
-	// ยังโหลด config ไม่เสร็จ → ใช้ค่าเดิมที่เคยกำหนดไว้ในโค้ด
-	if (!configLoaded || !config || !config.defaultOpen) {
-		if (now < FALLBACK_OPEN) return { status: 0, timeEnd: FALLBACK_OPEN };
-		if (now < FALLBACK_CLOSE) return { status: 1, timeEnd: FALLBACK_CLOSE };
-		return { status: 2 };
+
+	// ยังโหลด config ไม่เสร็จ/ไม่ได้ → ใช้เวลาค่าเริ่มต้นกับงวดถัดไป (ไม่ hardcode วันที่ตายตัว)
+	if (!configLoaded || !config) {
+		var dsF = dateStr(nextDrawDay(now));
+		var fOpen = combineHM(dsF, defOpen);
+		var fClose = combineHM(dsF, defClose);
+		if (now < fOpen) return { status: 0, timeEnd: fOpen, openTime: defOpen, closeTime: defClose };
+		if (now < fClose) return { status: 1, timeEnd: fClose, openTime: defOpen, closeTime: defClose };
+		return { status: 2, openTime: defOpen, closeTime: defClose };
 	}
-	// อัตโนมัติตามตารางงวด
-	if (!isDrawDay(now)) return { status: 2 };
+
+	// อัตโนมัติตามตารางงวด — วันไม่ใช่งวดให้ปิด
+	if (!isDrawDay(now)) return { status: 2, openTime: defOpen, closeTime: defClose };
 	var ds = dateStr(now);
 	var ov = null;
 	for (var i = 0; i < config.overrides.length; i++) {
 		if (config.overrides[i].date === ds) { ov = config.overrides[i]; break; }
 	}
-	if (ov && ov.enabled === false) return { status: 2 }; // งวดนี้ปิดพิเศษ
-	var open = combineHM(ds, (ov && ov.open) || config.defaultOpen);
-	var close = combineHM(ds, (ov && ov.close) || config.defaultClose);
-	if (now < open) return { status: 0, timeEnd: open };
-	if (now < close) return { status: 1, timeEnd: close };
-	return { status: 2 };
+	if (ov && ov.enabled === false) return { status: 2, openTime: defOpen, closeTime: defClose }; // งวดนี้ปิดพิเศษ
+
+	var openStr = (ov && ov.open) || config.defaultOpen;
+	var closeStr = (ov && ov.close) || config.defaultClose;
+	var open = combineHM(ds, openStr);
+	var close = combineHM(ds, closeStr);
+
+	if (now < open) return { status: 0, timeEnd: open, openTime: openStr, closeTime: closeStr };
+	if (now < close) return { status: 1, timeEnd: close, openTime: openStr, closeTime: closeStr };
+	return { status: 2, openTime: openStr, closeTime: closeStr };
 }
 
 function setDisplay(id, value) {
@@ -134,16 +150,18 @@ function updateTimer() {
 		'<div>' + m + '<span>นาที</span></div>' +
 		'<div>' + s + '<span>วินาที</span></div>';
 
-	/** -- ควบคุมการเปิดหน้าต่างๆ ตามเวลาที่กำหนด -- **/
+	/** -- ควบคุมการเปิดหน้าต่างๆ ตามเวลาที่กำหนด (จากค่าที่ตั้งไว้) -- **/
 	if (status === 0) {
+		var openLabel = st.openTime ? ' เวลา ' + st.openTime + ' น.' : '';
 		document.getElementById("msgStatus").innerHTML =
-			`<h2>จะเปิดให้เล่นกิจกรรมทายหวย  </h2> <img src="https://media0.giphy.com/media/AgBce8OuQ5mbencR1H/200w.webp?cid=ecf05e47kxj12cpe8nbd0m4lddbapg86iir9027qrx22bqb3&ep=v1_gifs_related&rid=200w.webp&ct=s" alt="Girl in a jacket" style="width:370px;height:300px;">`;
+			`<h2>จะเปิดให้เล่นกิจกรรมทายหวย${openLabel}  </h2> <img src="https://media0.giphy.com/media/AgBce8OuQ5mbencR1H/200w.webp?cid=ecf05e47kxj12cpe8nbd0m4lddbapg86iir9027qrx22bqb3&ep=v1_gifs_related&rid=200w.webp&ct=s" alt="Girl in a jacket" style="width:370px;height:300px;">`;
 		setDisplay("timer", "");
 		setDisplay("btnResult", "none");
 		setDisplay("cover", "none");
 	} else if (status === 1) {
+		var closeLabel = (!st.forced && st.closeTime) ? ' เวลา ' + st.closeTime + ' น.' : '';
 		document.getElementById("msgStatus").innerHTML =
-			st.forced ? "<h2>เปิดระบบการทายหวยแล้ว</h2>" : "<h2>จะปิดให้ทายหวย</h2>";
+			st.forced ? "<h2>เปิดระบบการทายหวยแล้ว</h2>" : "<h2>จะปิดให้ทายหวย" + closeLabel + "</h2>";
 		setDisplay("timer", "");
 		setDisplay("cover", "block");
 	} else {
