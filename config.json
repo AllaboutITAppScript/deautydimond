@@ -1,5 +1,6 @@
 {
   "schemaVersion": 2,
+  "gasUrl": "",
   "manualOverride": null,
   "defaultOpen": "06:00",
   "defaultClose": "14:00",

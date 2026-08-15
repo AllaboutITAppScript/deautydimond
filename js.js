@@ -27,6 +27,23 @@ async function loadConfig() {
 				if (!config.defaultClose) config.defaultClose = '14:00';
 				if (!Array.isArray(config.overrides)) config.overrides = [];
 			}
+			// ถ้ามีการตั้งค่า Google Apps Script (gasUrl) ให้ใช้ค่าจาก GAS เป็นหลัก
+			if (config && config.gasUrl) {
+				try {
+					var gasRes = await fetch(config.gasUrl + '?action=getConfig', { cache: 'no-store' });
+					if (gasRes.ok) {
+						var gas = await gasRes.json();
+						if (gas && typeof gas === 'object' && (gas.manualOverride || gas.defaultOpen || gas.defaultClose || (gas.overrides && gas.overrides.length))) {
+							config.manualOverride = gas.manualOverride || null;
+							if (gas.defaultOpen) config.defaultOpen = gas.defaultOpen;
+							if (gas.defaultClose) config.defaultClose = gas.defaultClose;
+							config.overrides = Array.isArray(gas.overrides) ? gas.overrides : [];
+						}
+					}
+				} catch (e2) {
+					console.warn('โหลด config จาก Google Apps Script ไม่สำเร็จ ใช้ค่าใน config.json', e2);
+				}
+			}
 		}
 	} catch (e) {
 		console.warn('โหลด config.json ไม่สำเร็จ ใช้ค่าเริ่มต้นเดิม', e);
@@ -142,6 +159,10 @@ function updateTimer() {
 }
 
 setInterval(updateTimer, 1000);
-// โหลด config ทันที และโหลดซ้ำทุก 5 นาที (รับการแก้ config.json ใหม่โดยไม่ต้องโหลดหน้าใหม่)
+// โหลด config ทันที และโหลดซ้ำทุก 3 นาที (รับการตั้งค่าใหม่จากหน้า settings โดยไม่ต้องโหลดหน้าใหม่)
 loadConfig();
-setInterval(loadConfig, 300000);
+setInterval(loadConfig, 180000);
+// โหลดซ้ำทุกครั้งที่กลับมาที่แท็บ (กรณีเพิ่งบันทึกการตั้งค่าแล้วกลับมาดู)
+document.addEventListener('visibilitychange', function () {
+	if (!document.hidden) loadConfig();
+});
