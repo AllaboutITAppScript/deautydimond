@@ -525,8 +525,8 @@
                     }
                 } catch (e) {}
                 if (!connected) {
-                    setStatusBadge('เชื่อมต่อ GAS ไม่ได้ — ใช้ค่าจาก config.json (สำรอง)', 'badge-danger');
-                    $('connStatus').innerHTML = '<span class="text-danger"><span class="status-dot bad"></span>เชื่อมต่อไม่ได้ — ตรวจ gasUrl และสถานะการ Deploy</span>';
+                    setStatusBadge('GAS ยังไม่เชื่อมต่อ — ใช้ค่าจาก config.json (ตั้งค่าได้ปกติ)', 'badge-warning');
+                    $('connStatus').innerHTML = '<span class="text-warning"><span class="status-dot warn"></span>GAS ยังไม่เชื่อมต่อ — ระบบใช้การตั้งค่าจาก config.json (บันทึกอัตโนมัติลง Google Sheet ยังใช้ไม่ได้)</span>';
                     current = local;
                 }
             } else {
