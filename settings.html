@@ -448,13 +448,26 @@
             });
         }
 
-        // ---------- เรียกใช้งาน GAS ----------
+        // ---------- เรียกใช้งาน GAS (มีหมดเวลา — ถ้า GAS ไม่ตอบสนองจะได้ไม่ค้างหน้า) ----------
+        async function fetchWithTimeout(url, opts, ms) {
+            var ctrl = new AbortController();
+            var timer = setTimeout(function () { ctrl.abort(); }, ms || 8000);
+            try {
+                return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal }));
+            } catch (e) {
+                if (e && e.name === 'AbortError') throw new Error('Google Apps Script ไม่ตอบสนอง (หมดเวลา 8 วินาที)');
+                throw e;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function fetchGas(action, payload) {
             if (action === 'getConfig') {
-                var res = await fetch(gasUrl + '?action=getConfig', { cache: 'no-store' });
+                var res = await fetchWithTimeout(gasUrl + '?action=getConfig', { cache: 'no-store' });
                 return await res.json();
             }
-            var res = await fetch(gasUrl, {
+            var res = await fetchWithTimeout(gasUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
