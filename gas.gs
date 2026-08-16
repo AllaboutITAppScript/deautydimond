@@ -30,11 +30,16 @@ var PROP_SHEET_ID = 'LOTTERY_SHEET_ID';
 var DEFAULT_PIN = '1234';
 
 function doGet(e) {
-  var action = (e && e.parameter && e.parameter.action) || 'getConfig';
-  if (action === 'getConfig') {
-    return json_(getConfigPayload());
+  try {
+    var action = (e && e.parameter && e.parameter.action) || 'getConfig';
+    if (action === 'getConfig') {
+      return json_(getConfigPayload());
+    }
+    return json_({ success: false, message: 'ไม่รู้จัก action: ' + action });
+  } catch (err) {
+    // ไม่ให้ค้าง/error เงียบ — คืน JSON พร้อมข้อความเสมอ
+    return json_({ success: false, message: 'เกิดข้อผิดพลาด: ' + err });
   }
-  return json_({ success: false, message: 'ไม่รู้จัก action: ' + action });
 }
 
 function doPost(e) {
