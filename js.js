@@ -28,12 +28,13 @@ async function loadConfig() {
 			// ถ้ามีการตั้งค่า Google Apps Script (gasUrl) ให้ใช้ค่าจาก GAS เป็นหลัก
 			if (config && config.gasUrl) {
 				try {
-					// มีหมดเวลา 8 วินาที — ถ้า GAS ไม่ตอบสนอง จะได้ไม่ค้างหน้า แล้วใช้ค่าใน config.json แทน
+					// มีหมดเวลา 15 วินาที — ถ้า GAS ไม่ตอบสนอง จะได้ไม่ค้างหน้า แล้วใช้ค่าใน config.json แทน
 				var gasCtl = new AbortController();
-				var gasTimer = setTimeout(function () { gasCtl.abort(); }, 8000);
+				var gasTimer = setTimeout(function () { gasCtl.abort(); }, 15000);
 				var gasRes;
 				try {
-					gasRes = await fetch(config.gasUrl + '?action=getConfig', { cache: 'no-store', signal: gasCtl.signal });
+					var getUrl = config.gasUrl + (config.gasUrl.indexOf('?') > -1 ? '&' : '?') + 'action=getConfig';
+					gasRes = await fetch(getUrl, { cache: 'no-store', signal: gasCtl.signal, redirect: 'follow' });
 				} finally {
 					clearTimeout(gasTimer);
 				}
