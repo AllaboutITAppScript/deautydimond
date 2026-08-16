@@ -660,8 +660,9 @@
         function showSaveResult(type, msg) {
             var el = $('saveStatus');
             el.style.display = 'block';
-            el.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' small font-weight-bold mt-3';
-            el.innerHTML = (type === 'success' ? '✅ ' : '❌ ') + msg;
+            var cls = type === 'success' ? 'success' : (type === 'info' ? 'info' : 'danger');
+            el.className = 'alert alert-' + cls + ' small font-weight-bold mt-3';
+            el.innerHTML = (type === 'success' ? '✅ ' : (type === 'info' ? 'ℹ️ ' : '❌ ')) + msg;
         }
 
         function setSaving(on) {
@@ -710,7 +711,20 @@
                     showSaveResult('danger', data.message || 'บันทึกไม่สำเร็จ (รหัสผ่านไม่ถูกต้องหรือ GAS มีปัญหา)');
                 }
             } catch (e) {
-                showSaveResult('danger', 'เกิดข้อผิดพลาด: ' + e.message);
+                // GAS ต่อไม่ได้ → แนะนำวิธีคัดลอก config.json แทน (ทำงานได้โดยไม่ต้องพึ่ง GAS)
+                showSaveResult('danger', 'บันทึกไปยัง Google Apps Script ไม่ได้ (' + e.message + ')<br>ใช้วิธีคัดลอก <b>config.json</b> ด้านล่าง (ขั้นสูง) แทน — วางทับไฟล์ <code>config.json</code> ใน GitHub แล้วกด Commit');
+                $('advSection').style.display = 'block';
+                try {
+                    // สร้าง JSON จากค่าที่กรอกอยู่ตอนนี้ทันที แล้วคัดลอกให้อัตโนมัติ
+                    var fbCfg = await buildConfig();
+                    var fbJson = JSON.stringify(fbCfg, null, 2);
+                    $('jsonOut').value = fbJson;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(fbJson).then(function () {
+                            showSaveResult('info', 'คัดลอก config.json ใส่คลิปบอร์ดแล้ว — เปิดไฟล์ <code>config.json</code> ใน GitHub กด Edit วางทับ แล้วกด Commit changes');
+                        }, function () {});
+                    }
+                } catch (e2) {}
             } finally {
                 setSaving(false);
             }
