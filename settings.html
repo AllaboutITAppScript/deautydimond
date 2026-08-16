@@ -277,6 +277,7 @@
                 <h5 class="card-title"><i class="fas fa-lock text-warning mr-1"></i>กรอกรหัสผ่านผู้ดูแล</h5>
                 <input type="password" id="pinInput" class="form-control" placeholder="รหัสผ่าน (PIN)" maxlength="20" autocomplete="off">
                 <div id="pinError" class="text-danger mt-2" style="display:none;"><i class="fas fa-times-circle mr-1"></i>รหัสผ่านไม่ถูกต้อง</div>
+                <div id="pinHint" class="small text-muted mt-2" style="display:none;"></div>
                 <button id="pinBtn" class="btn btn-primary btn-block mt-3"><i class="fas fa-sign-in-alt mr-1"></i>เข้าสู่ระบบ</button>
                 <small class="text-muted d-block mt-2">รหัสเริ่มต้น: <code>1234</code> (เปลี่ยนได้ด้านล่าง)</small>
             </div>
@@ -507,6 +508,10 @@
 
             gasUrl = (local && local.gasUrl) || '';
 
+            // ตั้งรหัสผ่านจาก config.json ทันที — ให้กรอกรหัสเข้าสู่ระบบได้เลยโดยไม่ต้องรอ GAS
+            // (ถ้า GAS ต่อได้ จะทับด้วยรหัสที่ตั้งไว้ใน Google Sheet ด้านล่าง)
+            existingPinHash = (local && local.adminPinHash) || DEFAULT_HASH;
+
             var current = null;
             var connected = false;
             if (gasUrl) {
@@ -530,7 +535,17 @@
                 $('connStatus').innerHTML = '<span class="text-warning"><span class="status-dot warn"></span>ยังไม่ได้ตั้งค่า gasUrl ใน config.json</span>';
             }
 
-            existingPinHash = (current && current.adminPinHash) || DEFAULT_HASH;
+            // ถ้า GAS ต่อได้ ให้ใช้ค่า hash ของ PIN จาก GAS ทับ (รหัสที่ตั้งไว้ใน Google Sheet)
+            if (connected && current && current.adminPinHash) existingPinHash = current.adminPinHash;
+
+            // คำใบ้ใต้ช่องรหัส — บอกว่าระบบใช้รหัสชุดไหนอยู่
+            var pinHint = $('pinHint');
+            if (connected) {
+                pinHint.style.display = 'none';
+            } else {
+                pinHint.style.display = 'block';
+                pinHint.innerHTML = '<i class="fas fa-exclamation-triangle text-warning mr-1"></i>เชื่อมต่อ Google Apps Script ไม่ได้ — ระบบใช้รหัสจากไฟล์ <code>config.json</code> (เริ่มต้น <code>1234</code>)';
+            }
 
             $('defOpen').value = (current && current.defaultOpen) || '06:00';
             $('defClose').value = (current && current.defaultClose) || '14:00';
@@ -725,7 +740,8 @@
 
         // ---------- เหตุการณ์ ----------
         window.addEventListener('DOMContentLoaded', async function () {
-            await loadAll();
+            // ผูกเหตุการณ์ทั้งหมดก่อน (ไม่ต้องรอ loadAll) — ให้ปุ่มล็อกอินทำงานได้ทันที
+            // แม้ GAS จะยังไม่ตอบสนอง (เดิมผูกหลัง await loadAll() ทำให้กดปุ่มแล้วไม่มีผลในช่วงรอ GAS)
 
             // ล็อกอิน PIN
             $('pinBtn').addEventListener('click', unlock);
@@ -789,11 +805,20 @@
                 a.click();
                 URL.revokeObjectURL(url);
             });
+
+            // โหลดการตั้งค่า (รหัสผ่านเริ่มต้นถูกตั้งจาก config.json ทันทีใน loadAll)
+            await loadAll();
         });
 
         async function unlock() {
             var pin = $('pinInput').value.trim();
             if (!pin) return;
+            if (!existingPinHash) {
+                // ยังโหลดรหัสไม่เสร็จ (ช่วงแรกเริ่ม) — บอกให้รอแทนการบอกว่า "รหัสผิด"
+                $('pinError').innerHTML = '<i class="fas fa-hourglass-half mr-1"></i>ระบบยังโหลดการตั้งค่าไม่เสร็จ กรุณารอสักครู่แล้วลองอีกครั้ง';
+                $('pinError').style.display = 'block';
+                return;
+            }
             var h = await sha256Hex(pin);
             if (h === existingPinHash) {
                 enteredPin = pin;
